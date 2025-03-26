@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+project_name: telegram-owl
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: telegram-owl
+    main: ./cmd/telegram-owl
+    goos:
+      - windows
+      - darwin
+      - linux
+      - freebsd
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: freebsd
+        goarch: arm
+    goarm:
+      - 7
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/beeyev/telegram-owl/internal/version.version={{.Version}}
+
+
+archives:
+  - formats: [tar.gz]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ title .Os }}{{ end }}_
+      {{- if eq .Arch "amd64" }}64bit
+      {{- else if eq .Arch "386" }}32bit
+      {{- else if eq .Arch "arm" }}ARM
+      {{- else if eq .Arch "arm64" }}ARM64
+      {{- else }}{{ .Arch }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        formats: [ 'zip' ]
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "telegram-owl_v{{.Version}}_checksums.txt"
+
+changelog:
+  use: github-native
+  sort: asc
+
+upx:
+  - enabled: true
+    goos:
+      - linux
+      - windows
+    compress: best
+    lzma: true
+    brute: false
+
+report_sizes: true

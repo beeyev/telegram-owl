@@ -1,0 +1,73 @@
+# Alexander Tebiev - https://github.com/beeyev
+name: Release 🚀
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger on semantic version tags like v1.2.3
+
+permissions:
+  contents: write # For creating GitHub releases
+  packages: write # If using GitHub Packages
+
+jobs:
+  release:
+    name: 🛠 Build & Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for GoReleaser to detect version info
+
+      - name: 🧰 Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: ℹ️ Version Info
+        run: |
+          echo ""
+          echo "🔹 UPX version: $(upx --version)"
+          echo ""
+          echo "🔹 Go version: $(go version)"
+          echo ""
+          echo "🔹 Current tag: ${{ github.ref_name }}"
+
+
+      - name: 🚀 Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Install UPX
+#        uses: crazy-max/ghaction-upx@v3
+#        with:
+#          install-only: true
+
+#      - name: Install UPX
+#        run: |
+#          set -euo pipefail
+#
+#          UPX_VERSION=$(
+#            curl -s https://api.github.com/repos/upx/upx/releases/latest \
+#              | jq -r '.tag_name[1:]'
+#          )
+#
+#          echo "UPX version to install: ${UPX_VERSION}"
+#
+#          wget -q "https://github.com/upx/upx/releases/latest/download/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+#          tar --to-stdout -xf "upx-${UPX_VERSION}-amd64_linux.tar.xz" \
+#            "upx-${UPX_VERSION}-amd64_linux/upx" > "${PWD}/upx"
+#          chmod -v +x "${PWD}/upx"
+#
+#          "${PWD}/upx" --version
+#
+#          echo "${PWD}/upx" >> $GITHUB_PATH

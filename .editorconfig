@@ -1,0 +1,96 @@
+# EditorConfig
+# https://gist.github.com/beeyev/da5a065d01a506d0b3d42e794f7aadf9
+
+# Top-most EditorConfig file
+root = true
+
+# General rule: Unix-style newlines with UTF-8 encoding
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# PHP, CSS, SCSS
+[*.{php,css,scss}]
+indent_size = 4
+
+# Bazel
+[*.{bazel,bzl}]
+indent_size = 4
+
+# YAML-based files
+[*.{yml,yaml,sls}]
+indent_size = 2
+
+# NEON Configuration files
+[*.{neon,neon.dist}]
+indent_style = tab
+indent_size = 4
+
+# CoffeeScript & CJSX
+[*.{cjsx,coffee}]
+indent_size = 2
+tab_width = 2
+
+# Markdown & Text files (whitespace is important)
+[*.{md,markdown,txt}]
+indent_size = 4
+trim_trailing_whitespace = false
+
+# Makefiles, Caddyfiles, Git configuration
+[{Makefile,Caddyfile,*.Caddyfile,.gitconfig,.gitconfig.local}]
+indent_style = tab
+tab_width = 4
+
+# Python (PEP 8)
+[*.py]
+indent_size = 4
+
+# Shell Scripts (Google Style Guide
+# https://google.github.io/styleguide/shell.xml#Indentation
+[*.{bash,sh,zsh}]
+indent_size = 2
+
+# Go
+# https://golang.org/cmd/gofmt/
+[{go.mod,go.sum,*.go}]
+indent_style = tab
+indent_size = 4  # Explicit tab width for Go (common convention)
+
+# Dockerfiles
+[*.{Dockerfile,Dockerfile.template.erb,Dockerfile-alpine}]
+indent_size = 4
+
+# Environment Files
+[*.env]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# JavaScript, JSON, JSX, TypeScript
+# https://github.com/feross/standard
+[*.{cjs,js,json,jsx,mjs,ts,tsx}]
+indent_size = 2
+
+# XML, XSD, and similar
+[*.{xml,xml.dist,xsd}]
+max_line_length = off
+indent_size = 2
+
+# TOML
+[*.toml]
+indent_size = 2
+
+# Terraform, HCL, Nomad
+[*.{tf,tfvars,hcl,nomad}]
+indent_size = 2
+
+# Composer JSON (uses 4 spaces)
+[composer.json]
+indent_size = 4
+
+# Diff & Patch files (preserve formatting)
+[*.{diff,patch}]
+insert_final_newline = false
+trim_trailing_whitespace = false

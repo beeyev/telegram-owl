@@ -1,0 +1,75 @@
+# Alexander Tebiev - https://github.com/beeyev
+name: 🧪 Unit Tests & 🔍 Linters
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOLANGCILINT_VERSION: "1.64.8"
+
+jobs:
+  unit-tests:
+    name: ✅ Run Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 📦 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🧰 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 📖 Display Go Version
+        run: go version
+
+      - name: 🔍 Run Unit Tests with Coverage
+        run: go test -v ./...
+        env:
+          CGO_ENABLED: 0
+
+      - name: 🧪 Build (Validation)
+        run: go build -v ./...
+
+  golangci-lint:
+    name: ✨ Lint with golangci-lint + reviewdog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 📦 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🧪 Run golangci-lint via reviewdog
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_version: v${{ env.GOLANGCILINT_VERSION }}
+          tool_name: "golangci-lint"
+          go_version_file: "go.mod"
+          filter_mode: "nofilter" # check the whole repo, not just lines added or changed
+          reporter: "github-pr-check"
+
+#      - name: Setup Go environment
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version-file: ./go.mod
+#          check-latest: true
+#          cache-dependency-path: ./go.sum
+
+#      # Update to v7 after switching to golangci v2.0
+#      - name: 🧹 Run golangci-lint
+#        uses: golangci/golangci-lint-action@v6
+#        with:
+#          version: v${{ env.GOLANGCILINT_VERSION }}
