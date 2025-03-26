@@ -1,7 +1,5 @@
 # Telegram Owl 🦉
 
-A lightweight CLI utility to send messages and media files to Telegram chats and channels — directly from your terminal.
-
 > 📣 Use it to send deployment notifications, alerts, logs, reports, or media — from scripts, cron jobs, CI/CD pipelines, monitoring tools, or any shell environment.
 
 Whether you're a DevOps engineer automating infrastructure, a developer managing CI/CD pipelines, or just want to notify your Telegram group from a terminal script — **Telegram Owl** gives you a simple and script-friendly way to do it.
