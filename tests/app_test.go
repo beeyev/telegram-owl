@@ -89,6 +89,16 @@ func TestSendMessage_Success(t *testing.T) {
 			expectedJSONPayload: `{"chat_id":"75757","text":"Hello"}`,
 		},
 		{
+			name:                "format flag with markdown",
+			args:                []string{"--token=123:abc", "--chat=75757", "--message=Hello", "--format=markdown"},
+			expectedJSONPayload: `{"chat_id":"75757","text":"Hello","parse_mode":"MarkdownV2"}`,
+		},
+		{
+			name:                "format flag with html",
+			args:                []string{"--token=123:abc", "--chat=75757", "--message=Hello", "--format=html"},
+			expectedJSONPayload: `{"chat_id":"75757","text":"Hello","parse_mode":"html"}`,
+		},
+		{
 			name: "All flags",
 			args: []string{
 				"--token=123:abc",
@@ -213,6 +223,11 @@ func Test_ErrorResponse(t *testing.T) {
 			name: "no message and no attachments",
 			args: []string{"--token=whatever", "--chat=whatever", "--attach=does-not-exist.jpg"},
 			want: "failed to load attachments",
+		},
+		{
+			name: "format flag with incorrect value",
+			args: []string{"--token=whatever", "--chat=whatever", "--message=hello", "--format=invalid"},
+			want: "incorrect value for --format flag",
 		},
 	}
 	for _, tt := range tests {

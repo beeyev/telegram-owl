@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/beeyev/telegram-owl/internal/telegram"
@@ -33,13 +32,6 @@ func flags() []cli.Flag {
 			OnlyOnce: true,
 			Sources:  cli.EnvVars("TELEGRAM_OWL_TOKEN"),
 			Config:   cli.StringConfig{TrimSpace: true},
-			Validator: func(token string) error {
-				if token == "" {
-					return errors.New("missing token")
-				}
-
-				return nil
-			},
 		},
 		&cli.StringFlag{
 			Name:     "chat",
@@ -48,19 +40,19 @@ func flags() []cli.Flag {
 			OnlyOnce: true,
 			Sources:  cli.EnvVars("TELEGRAM_OWL_CHAT"),
 			Config:   cli.StringConfig{TrimSpace: true},
-			Validator: func(chatID string) error {
-				if chatID == "" {
-					return errors.New("missing chat ID")
-				}
-
-				return nil
-			},
 		},
 		&cli.StringFlag{
 			Name:     "message",
 			Usage:    "Text message content. Use --stdin to read from standard input.",
 			Aliases:  []string{"m"},
 			OnlyOnce: true,
+		},
+		&cli.StringFlag{
+			Name:     "format",
+			Usage:    "Message format options, possible values: markdown, html",
+			Aliases:  []string{"f"},
+			OnlyOnce: true,
+			Config:   cli.StringConfig{TrimSpace: true},
 		},
 		&cli.StringSliceFlag{
 			Name:      "attach",
@@ -159,6 +151,7 @@ func NewApp(apiBotURL string) *cli.Command {
 				attachLoader:     attachLoader,
 				chatID:           cmd.String("chat"),
 				message:          iv.getMessage(),
+				MessageFormat:    cmd.String("format"),
 				attachmentsPaths: cmd.StringSlice("attach"),
 				silent:           cmd.Bool("silent"),
 				noLinkPreview:    cmd.Bool("no-link-preview"),
