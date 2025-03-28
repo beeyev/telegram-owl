@@ -47,17 +47,18 @@ telegram-owl \
 
 ### ⚙️ Common Flags
 
-| Flag                  | Description                                       |
-|-----------------------|---------------------------------------------------|
-| `--message`, `-m`      | Text message to send                              |
-| `--stdin`              | Read message content from `stdin`                |
-| `--attach`, `-a`       | Attach files (comma-separated or multiple flags) |
-| `--as-document`, `-d`  | Force all files to be sent as documents          |
-| `--silent`, `-s`       | Send silently (no notification sound)            |
-| `--spoiler`            | Hide media with spoiler animation                |
-| `--protect`            | Prevent forwarding and saving of content         |
-| `--no-link-preview`    | Disable automatic link previews in messages      |
-| `--thread`             | Thread ID for forum supergroup topics            |
+| Flag                  | Description                                                    |
+|-----------------------|----------------------------------------------------------------|
+| `--message`, `-m`      | Text message to send                                          |
+| `--format`, `-f`         | Message format options, possible values: `markdown`, `html` |
+| `--stdin`              | Read message content from `stdin`                             |
+| `--attach`, `-a`       | Attach files (comma-separated or multiple flags)              |
+| `--as-document`, `-d`  | Force all files to be sent as documents                       |
+| `--silent`, `-s`       | Send silently (no notification sound)                         |
+| `--spoiler`            | Hide media with spoiler animation                             |
+| `--protect`            | Prevent forwarding and saving of content                      |
+| `--no-link-preview`    | Disable automatic link previews in messages                   |
+| `--thread`             | Thread ID for forum supergroup topics                         |
 
 ## 📌 Examples
 
@@ -66,6 +67,18 @@ telegram-owl \
 ```bash
 telegram-owl -t $BOT_TOKEN -c @mychannel -m "Server status: OK ✅"
 ```
+
+### 📝 Send a Message with Markdown formatting
+```bash
+telegram-owl -t $BOT_TOKEN -c 123456 --format=markdown -m "*Bold text* via Markdown"
+```
+
+### 📝 Send a Message with HTML formatting
+```bash
+telegram-owl -t $BOT_TOKEN -c 123456 --format=html -m '<b>Bold text</b> via HTML and <a href="http://www.example.com/">inline URL</a>'
+```
+
+> Message formatting is supported for both `markdown` and `html` formats. But it does not work when text and files are sent together.
 
 ### 📎 Send Files with a Message
 

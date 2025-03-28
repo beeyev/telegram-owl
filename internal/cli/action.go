@@ -15,6 +15,7 @@ type action struct {
 	attachLoader     *attachment.Loader
 	chatID           string
 	message          string
+	MessageFormat    string
 	attachmentsPaths []string
 	silent           bool
 	noLinkPreview    bool
@@ -53,6 +54,7 @@ func (a *action) sendMessage(message string) error {
 	return a.client.SendMessage.Send(&sendmessage.Options{
 		ChatID:              a.chatID,
 		Text:                message,
+		ParseMode:           a.MessageFormat,
 		DisableNotification: a.silent,
 		ProtectContent:      a.protect,
 		MessageThreadID:     a.threadID,

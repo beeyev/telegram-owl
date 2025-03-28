@@ -36,6 +36,12 @@ Example:
 Run with --help to see all options.`)
 	}
 
+	format := iv.cmd.String("format")
+
+	if format != "" && format != "markdown" && format != "html" {
+		return errors.New(`incorrect value for --format flag, possible values: markdown, html`)
+	}
+
 	return nil
 }
 

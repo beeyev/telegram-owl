@@ -13,6 +13,7 @@ type Options struct {
 	ChatID              string
 	MessageThreadID     string
 	Text                string
+	ParseMode           string
 	HasSpoiler          bool
 	DisableNotification bool
 	ProtectContent      bool
@@ -23,6 +24,7 @@ type payload struct {
 	ChatID              string              `json:"chat_id"`
 	MessageThreadID     string              `json:"message_thread_id,omitempty"`
 	Text                string              `json:"text"`
+	ParseMode           string              `json:"parse_mode,omitempty"`
 	DisableNotification bool                `json:"disable_notification,omitempty"`
 	ProtectContent      bool                `json:"protect_content,omitempty"`
 	LinkPreviewOptions  *linkPreviewOptions `json:"link_preview_options,omitempty"`
@@ -41,8 +43,13 @@ func (o *Options) preparePayload() (*payload, error) {
 		ChatID:              o.ChatID,
 		MessageThreadID:     o.MessageThreadID,
 		Text:                o.Text,
+		ParseMode:           o.ParseMode,
 		DisableNotification: o.DisableNotification,
 		ProtectContent:      o.ProtectContent,
+	}
+
+	if o.ParseMode == "markdown" {
+		payload.ParseMode = "MarkdownV2"
 	}
 
 	if o.DisableLinkPreview {
