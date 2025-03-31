@@ -70,8 +70,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-          #TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-          #CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          FURY_TOKEN: ${{ secrets.FURY_PUSH_TOKEN }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3

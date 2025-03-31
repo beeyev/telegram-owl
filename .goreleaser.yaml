@@ -76,8 +76,6 @@ upx:
 report_sizes: true
 
 release:
-  extra_files:
-    - glob: dist/upload/**
   footer: |
     ## Install
 
@@ -86,7 +84,6 @@ release:
     ```console
     brew install beeyev/tap/telegram-owl
     ```
-
     #### Windows
     ##### Install with [Scoop](https://scoop.sh)
     ```console
@@ -156,7 +153,7 @@ chocolateys:
     name: telegram-owl
     package_source_url: https://github.com/beeyev/telegram-owl
     owners: Alexander Tebiev
-    title: telegram-owl
+    title: Telegram Owl
     authors: Alexander Tebiev
     project_url: https://github.com/beeyev/telegram-owl
     # icon_url: "https://rawcdn.githack.com/foo/bar/efbdc760-395b-43f1-bf69-ba25c374d473/icon.png"
@@ -174,3 +171,6 @@ chocolateys:
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
     # api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
+
+furies:
+    account: "beeyev"
