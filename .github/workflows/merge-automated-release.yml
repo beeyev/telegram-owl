@@ -29,7 +29,7 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: install chocolatey
+      - name: 🍫 install chocolatey
         run: |
           sudo apt-get --quiet update
           sudo apt-get --no-install-suggests --no-install-recommends --quiet --yes install dirmngr ca-certificates gnupg
@@ -66,9 +66,9 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
           #TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           #CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
-          #CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3

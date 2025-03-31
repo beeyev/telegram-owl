@@ -180,7 +180,7 @@ chocolateys:
     # The api key that should be used to push to the chocolatey repository.
     #
     # WARNING: do not expose your api key in the configuration file!
-    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    #api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 
     # The source repository that will push the package to.
     source_repo: "https://push.chocolatey.org/"
