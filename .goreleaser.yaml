@@ -154,7 +154,7 @@ winget:
   -
     publisher: Alexander Tebiev
     short_description: "CLI utility to send messages and files to Telegram chats and channels"
-    license: "mit"
+    license: "MIT"
     publisher_url: "https://github.com/beeyev/telegram-owl"
     publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
     package_identifier: beeyev.telegram-owl
@@ -181,8 +181,6 @@ winget:
     repository:
       owner: beeyev
       name: pkg
-
-
 
 chocolateys:
   -
