@@ -74,3 +74,46 @@ upx:
     brute: false
 
 report_sizes: true
+
+scoops:
+  - # Name of the recipe
+    #
+    # Default: the project name.
+    # Templates: allowed.
+    name: telegram-owl
+
+    # Git author used to commit to the repository.
+    # Templates: allowed.
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+
+    # The project name and current git tag are used in the format string.
+    #
+    # Templates: allowed.
+    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
+
+
+    # Setting this will prevent goreleaser to actually try to commit the updated
+    # manifest leaving the responsibility of publishing it to the user.
+    # If set to auto, the release will not be uploaded to the scoop bucket
+    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+    #
+    # Templates: allowed.
+    # skip_upload: true
+
+
+    # A two-dimensional array of string, specifies the shortcut values to make available in the startmenu.
+    # The array has to contain an executable/label pair. The third and fourth element are optional.
+    shortcuts: [["telegram-owl.exe", "telegram-owl"]]
+
+    # Repository to push the generated files to.
+    repository:
+      # Sets up pull request creation instead of just pushing to the given branch.
+      # Make sure the 'branch' property is different from base before enabling
+      # it.
+      #
+      # This might require a personal access token.
+      pull_request:
+        # Whether to enable it or not.
+        enabled: true
