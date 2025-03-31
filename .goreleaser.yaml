@@ -61,7 +61,7 @@ checksum:
   name_template: "telegram-owl_v{{.Version}}_checksums.txt"
 
 changelog:
-  use: github-native
+  use: github
   sort: asc
 
 upx:
