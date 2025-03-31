@@ -129,7 +129,8 @@ scoops:
     #shortcuts: [["drumroll.exe", "drumroll"]]
     repository:
       owner: beeyev
-      name: scoop-bucket
+      name: pkg
+      #name: scoop-bucket
 
 brews:
   -
@@ -146,7 +147,42 @@ brews:
       assert_match version.to_s, shell_output("#{bin}/telegram-owl --version")
     repository:
       owner: beeyev
-      name: homebrew-tap
+      name: pkg
+      #name: homebrew-tap
+
+winget:
+  -
+    publisher: Alexander Tebiev
+    short_description: "CLI utility to send messages and files to Telegram chats and channels"
+    license: "mit"
+    publisher_url: "https://github.com/beeyev/telegram-owl"
+    publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
+    package_identifier: beeyev.telegram-owl
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
+    # Path for the file inside the repository.
+    #
+    # Default: 'manifests/<lowercased first char of publisher>/<publisher>/<name>/<version>'.
+    path: "manifests/b/beeyev/telegram-owl/{{.Version}}"
+    homepage: "https://github.com/beeyev/telegram-owl"
+    description: "CLI utility to send messages and media files to Telegram chats and channels — directly from your terminal"
+    license_url: "https://github.com/beeyev/telegram-owl/blob/master/LICENSE"
+    copyright: "Alexander Tebiev"
+    copyright_url: "https://github.com/beeyev"
+    skip_upload: auto
+    release_notes: "{{.Changelog}}"
+    release_notes_url: "https://github.com/beeyev/telegram-owl/releases/tag/v{{.Version}}"
+    tags:
+      - telegram
+      - cli
+    # Repository to push the generated files to.
+    repository:
+      owner: beeyev
+      name: pkg
+
+
 
 chocolateys:
   -
