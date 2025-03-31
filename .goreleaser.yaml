@@ -75,6 +75,49 @@ upx:
 
 report_sizes: true
 
+release:
+  extra_files:
+    - glob: dist/upload/**
+  footer: |
+    ## Install
+
+    #### macOS and Linux
+    ##### Install with [Homebrew](https://brew.sh) (recommended)
+    ```console
+    brew install beeyev/tap/telegram-owl
+    ```
+
+    #### Windows
+    ##### Install with [Scoop](https://scoop.sh)
+    ```console
+    scoop bucket add beeyev https://github.com/beeyev/scoop-bucket
+    scoop install telegram-owl
+    ```
+    ##### Install with [Chocolatey](https://chocolatey.org)
+    ```console
+    choco install telegram-owl
+    ```
+
+    #### Anywhere else
+    Alternatively, you can install the latest binary from this page.
+
+    ## Update
+    Update to the latest version depends on how you choose to install `telegram-owl` on your machine.
+    #### Update with [Homebrew](https://brew.sh)
+    ```console
+    brew upgrade telegram-owl
+    ```
+    #### Update with [Scoop](https://scoop.sh)
+    ```console
+    scoop update telegram-owl
+    ```
+    #### Update with [Chocolatey](https://chocolatey.org)
+    ```console
+    choco upgrade telegram-owl
+    ```
+
+    Alternatively, you can grab the latest binary (or the apt/rpm/deb package) from this page.
+
 scoops:
   -
     commit_author:
@@ -111,76 +154,23 @@ brews:
 chocolateys:
   -
     name: telegram-owl
-
-    # Your chocolatey package's source URL.
-    # It point at the location of where someone can find the packaging files for the package.
     package_source_url: https://github.com/beeyev/telegram-owl
-
-    # Your app's owner.
-    # It basically means you.
     owners: Alexander Tebiev
-
-    # The app's title.
-    # A human-friendly title of the package.
-    #
-    # Default: the project name.
     title: telegram-owl
-
-    # Your app's authors (probably you).
     authors: Alexander Tebiev
-
-    # Your app's project url.
-    # It is a required field.
     project_url: https://github.com/beeyev/telegram-owl
-
-    # App's icon.
     # icon_url: "https://rawcdn.githack.com/foo/bar/efbdc760-395b-43f1-bf69-ba25c374d473/icon.png"
-
-    # Your app's copyright details.
-    #
-    # Templates: allowed.
     copyright: Alexander Tebiev
-
-    # App's license information url.
     license_url: https://github.com/beeyev/telegram-owl/blob/master/LICENSE
-
-    # Your apps's require license acceptance:
-    # Specify whether the client must prompt the consumer to accept the package
-    # license before installing.
     require_license_acceptance: false
-
-    # Your app's source url.
     project_source_url: https://github.com/beeyev/telegram-owl
-
-    # Your app's documentation url.
     docs_url: https://github.com/beeyev/telegram-owl/blob/master/README.md
-
-    # App's bugtracker url.
     bug_tracker_url: https://github.com/beeyev/telegram-owl/issues
-
-    # Your app's tag list.
     tags: "telegram"
-
-    # Your app's summary:
     summary: CLI utility to send messages and files to Telegram chats and channels
-
-    # This the description of your chocolatey package.
-    # Supports markdown.
     description: |
       {{ .ProjectName }} installer package.
       CLI utility to send messages and files to Telegram chats and channels
-
-    # Your app's release notes.
-    # A description of the changes made in this release of the package.
-    # Supports markdown. To prevent the need to continually update this field,
-    # providing a URL to an external list of Release Notes is perfectly
-    # acceptable.
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
-
-    # The api key that should be used to push to the chocolatey repository.
-    #
-    # WARNING: do not expose your api key in the configuration file!
-    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
-
-    # The source repository that will push the package to.
+    # api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"

@@ -29,6 +29,9 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+#      - name: Install mono
+#        run: sudo apt update && sudo apt install mono-complete
+
       - name: 🍫 install chocolatey
         run: |
           sudo apt-get --quiet update
