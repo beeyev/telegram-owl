@@ -7,11 +7,8 @@ on:
       - "v*.*.*" # Trigger on semantic version tags like v1.2.3
 
 permissions:
-  contents: write
-  id-token: write
-  packages: write
-  attestations: write
-  repo: write
+  contents: write # For creating GitHub releases
+  packages: write # If using GitHub Packages
 
 jobs:
   release:
@@ -48,8 +45,7 @@ jobs:
           version: '~> v2'
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3
