@@ -151,63 +151,20 @@ report_sizes: true
 #        # Whether to enable it or not.
 #        enabled: true
 
-
 brews:
   -
-
     goarm: 7
-
-    # Git author used to commit to the repository.
-    # Templates: allowed.
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-
-    # The project name and current git tag are used in the format string.
-    #
-    # Templates: allowed.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-
-    # Directory inside the repository to put the formula.
     directory: Formula
-
-    # Your app's homepage.
-    #
-    # Default: inferred from global metadata.
     homepage: "https://github.com/beeyev/telegram-owl"
-
-    # Your app's description.
-    #
-    # Templates: allowed.
-    # Default: inferred from global metadata.
     description: "CLI utility to send messages and files to Telegram chats and channels"
-
-    # SPDX identifier of your app's license.
-    #
-    # Default: inferred from global metadata.
     license: "MIT"
-
-
-    # So you can `brew test` your formula.
-    #
-    # Template: allowed
     test: |
-      system "#{bin}/telegram-owl --version"
-
-    # Repository to push the generated files to.
+      assert_match version.to_s, shell_output("#{bin}/telegram-owl --version")
     repository:
-      # Repository owner.
-      #
-      # Templates: allowed.
       owner: beeyev
-
-      # Repository name.
-      #
-      # Templates: allowed.
       name: homebrew-tap
-
-      # Optionally a branch can be provided.
-      #
-      # Default: default repository branch.
-      # Templates: allowed.
       branch: master
