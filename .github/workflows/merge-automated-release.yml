@@ -14,6 +14,10 @@ jobs:
   release:
     name: 🛠 Build & Release
     runs-on: ubuntu-latest
+    container:
+      # NOTE: It is also possible to install `choco` directly:
+      # https://github.com/JetBrains/qodana-cli/blob/29134e654dc4878e0587f02338c5101bce327560/.github/workflows/release.yml#L19-L27
+      image: chocolatey/choco:latest-linux
     timeout-minutes: 15
     steps:
       - name: 📦 Checkout code
@@ -29,16 +33,16 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: install chocolatey
-        run: |
-          mkdir -p /opt/chocolatey
-          wget -q -O - "https://github.com/chocolatey/choco/releases/download/${CHOCOLATEY_VERSION}/chocolatey.v${CHOCOLATEY_VERSION}.tar.gz" | tar -xz -C "/opt/chocolatey"
-          echo '#!/bin/bash' >> /usr/local/bin/choco
-          echo 'mono /opt/chocolatey/choco.exe $@' >> /usr/local/bin/choco
-          chmod +x /usr/local/bin/choco
-          echo "🔹 Choco version: $(choco --version)"
-        env:
-          CHOCOLATEY_VERSION: 2.4.1
+#      - name: install chocolatey
+#        run: |
+#          mkdir -p /opt/chocolatey
+#          wget -q -O - "https://github.com/chocolatey/choco/releases/download/${CHOCOLATEY_VERSION}/chocolatey.v${CHOCOLATEY_VERSION}.tar.gz" | tar -xz -C "/opt/chocolatey"
+#          echo '#!/bin/bash' >> /usr/local/bin/choco
+#          echo 'mono /opt/chocolatey/choco.exe $@' >> /usr/local/bin/choco
+#          chmod +x /usr/local/bin/choco
+#          echo "🔹 Choco version: $(choco --version)"
+#        env:
+#          CHOCOLATEY_VERSION: 2.4.1
 
       - name: ℹ️ Version Info
         run: |
@@ -49,7 +53,6 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
-
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -57,6 +60,8 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
+          #TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          #CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3
