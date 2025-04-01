@@ -182,7 +182,7 @@ winget:
 #      owner: beeyev
 #      name: pkg
     repository:
-      owner: beeyev
+      owner: beeyev-automation
       name: fork-winget-pkgs
       branch: "{{.ProjectName}}-{{.Version}}"
       pull_request:
@@ -215,3 +215,19 @@ chocolateys:
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
     # api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
+
+nfpms:
+  -
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: Alexander Tebiev
+    homepage: https://github.com/beeyev/telegram-owl
+    description: |-
+      CLI utility to send messages and media files to Telegram chats and channels — directly from your terminal
+    license: MIT
+    formats:
+      - apk
+      - deb
+      - rpm
+    bindir: /usr/bin
+    section: utils
+    mtime: "{{ .CommitDate }}"
