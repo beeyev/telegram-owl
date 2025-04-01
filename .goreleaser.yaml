@@ -122,13 +122,10 @@ scoops:
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
     license: MIT
-    # A two-dimensional array of string, specifies the shortcut values to make available in the startmenu.
-    # The array has to contain an executable/label pair. The third and fourth element are optional.
-    #shortcuts: [["drumroll.exe", "drumroll"]]
+    shortcuts: [["telegram-owl.exe", "telegram-owl"]]
     repository:
       owner: beeyev
       name: pkg
-      #name: scoop-bucket
 
 brews:
   -
@@ -146,7 +143,6 @@ brews:
     repository:
       owner: beeyev
       name: pkg
-      #name: homebrew-tap
 
 winget:
   -
