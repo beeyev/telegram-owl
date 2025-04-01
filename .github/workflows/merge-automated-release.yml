@@ -29,6 +29,24 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: 🍫 install chocolatey
+        run: |
+          sudo apt-get --quiet update
+          sudo apt-get --no-install-suggests --no-install-recommends --quiet --yes install dirmngr ca-certificates gnupg
+          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/debian stable-buster main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          sudo apt-get --quiet update
+          sudo apt-get --no-install-suggests --no-install-recommends --quiet --yes install mono-devel
+          mkdir -p /opt/chocolatey
+          wget -q -O - "https://github.com/chocolatey/choco/releases/download/${CHOCOLATEY_VERSION}/chocolatey.v${CHOCOLATEY_VERSION}.tar.gz" | tar -xz -C "/opt/chocolatey"
+          echo '#!/bin/bash' >> /usr/local/bin/choco
+          echo 'mono /opt/chocolatey/choco.exe $@' >> /usr/local/bin/choco
+          chmod +x /usr/local/bin/choco
+
+          echo "🔹 Choco version: $(choco --version)"
+        env:
+          CHOCOLATEY_VERSION: 2.4.1
+
       - name: ℹ️ Version Info
         run: |
           echo ""
@@ -38,14 +56,14 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
-
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: '~> v2'
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3
