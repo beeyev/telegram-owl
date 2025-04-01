@@ -76,44 +76,43 @@ upx:
 report_sizes: true
 
 release:
+  mode: append
   footer: |
-    ## Install
+    # Install
 
-    #### macOS and Linux
-    ##### Install with [Homebrew](https://brew.sh) (recommended)
+    ## macOS and Linux
+    ### Install with [Homebrew](https://brew.sh)
     ```console
-    brew install beeyev/tap/telegram-owl
+    brew tap beeyev/pkg https://github.com/beeyev/pkg
+    brew install telegram-owl
     ```
-    #### Windows
-    ##### Install with [Scoop](https://scoop.sh)
+    ## Windows
+    ### Install with [Scoop](https://scoop.sh)
     ```console
-    scoop bucket add beeyev https://github.com/beeyev/scoop-bucket
+    scoop bucket add beeyev https://github.com/beeyev/pkg
     scoop install telegram-owl
     ```
-    ##### Install with [Chocolatey](https://chocolatey.org)
-    ```console
-    choco install telegram-owl
-    ```
 
-    #### Anywhere else
+    ## Anywhere else
     Alternatively, you can install the latest binary from this page.
+
+    ### Manual downloads
+    Download for Windows [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_64bit.zip) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_32bit.zip) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_ARM64.zip) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_ARM.zip)
+    Download for Linux [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_32bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM64.tar.gz) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM.tar.gz)
+    Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
+
+    For more options, check Assets sections below ↓
 
     ## Update
     Update to the latest version depends on how you choose to install `telegram-owl` on your machine.
-    #### Update with [Homebrew](https://brew.sh)
+    ### Update with [Homebrew](https://brew.sh)
     ```console
     brew upgrade telegram-owl
     ```
-    #### Update with [Scoop](https://scoop.sh)
+    ### Update with [Scoop](https://scoop.sh)
     ```console
     scoop update telegram-owl
     ```
-    #### Update with [Chocolatey](https://chocolatey.org)
-    ```console
-    choco upgrade telegram-owl
-    ```
-
-    Alternatively, you can grab the latest binary (or the apt/rpm/deb package) from this page.
 
 scoops:
   -
@@ -178,19 +177,19 @@ winget:
       - telegram
       - cli
     # Repository to push the generated files to.
-#    repository:
-#      owner: beeyev
-#      name: pkg
     repository:
-      owner: beeyev-automation
-      name: fork-winget-pkgs
-      branch: "{{.ProjectName}}-{{.Version}}"
-      pull_request:
-        enabled: true
-        base:
-          owner: microsoft
-          name: winget-pkgs
-          branch: master
+      owner: beeyev
+      name: pkg
+#    repository:
+#      owner: beeyev-automation
+#      name: fork-winget-pkgs
+#      branch: "{{.ProjectName}}-{{.Version}}"
+#      pull_request:
+#        enabled: true
+#        base:
+#          owner: microsoft
+#          name: winget-pkgs
+#          branch: master
 
 chocolateys:
   -
@@ -213,5 +212,5 @@ chocolateys:
       {{ .ProjectName }} installer package.
       CLI utility to send messages and files to Telegram chats and channels
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
-    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    #api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
