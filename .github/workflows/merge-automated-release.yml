@@ -42,10 +42,8 @@ jobs:
           echo '#!/bin/bash' >> /usr/local/bin/choco
           echo 'mono /opt/chocolatey/choco.exe $@' >> /usr/local/bin/choco
           chmod +x /usr/local/bin/choco
-          echo "🔹 Choco version: $(choco --version)"
 
-          #choco upgrade chocolatey
-          #choco info vulnapi
+          echo "🔹 Choco version: $(choco --version)"
         env:
           CHOCOLATEY_VERSION: 2.4.1
 
@@ -58,7 +56,6 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
-
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -67,7 +64,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-          FURY_TOKEN: ${{ secrets.FURY_PUSH_TOKEN }}
 
 #      - name: Install UPX
 #        uses: crazy-max/ghaction-upx@v3

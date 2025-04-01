@@ -213,5 +213,5 @@ chocolateys:
       {{ .ProjectName }} installer package.
       CLI utility to send messages and files to Telegram chats and channels
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
-    # api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
