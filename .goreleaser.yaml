@@ -159,7 +159,7 @@ winget:
     publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
     package_identifier: beeyev.telegram-owl
     commit_author:
-      name: goreleaserbot
+      name: beeyev
       email: bot@goreleaser.com
     commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
     # Path for the file inside the repository.
@@ -178,9 +178,19 @@ winget:
       - telegram
       - cli
     # Repository to push the generated files to.
+#    repository:
+#      owner: beeyev
+#      name: pkg
     repository:
       owner: beeyev
-      name: pkg
+      name: fork-winget-pkgs
+      branch: "{{.ProjectName}}-{{.Version}}"
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
 
 chocolateys:
   -

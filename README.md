@@ -21,6 +21,22 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 
 ## 📦 Installation
 
+### macOS and Linux
+
+Install with [Homebrew](https://brew.sh/)
+```bash
+brew tap beeyev/pkg https://github.com/beeyev/pkg
+brew install telegram-owl
+```
+
+### Windows
+
+Install with [Scoop](https://scoop.sh/)
+```bash
+scoop bucket add beeyev https://github.com/beeyev/pkg
+scoop install telegram-owl
+```
+
 ### Binary Releases
 For Windows, Mac OS(10.12+) or Linux, you can download a binary release [here](https://github.com/beeyev/telegram-owl/releases/latest).
 
