@@ -61,8 +61,7 @@ checksum:
   name_template: "telegram-owl_v{{.Version}}_checksums.txt"
 
 changelog:
-  use: github
-  sort: asc
+  disable: true
 
 upx:
   - enabled: true
@@ -101,7 +100,7 @@ release:
     Download for Linux [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_32bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM64.tar.gz) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM.tar.gz)
     Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
 
-    For more options, check Assets sections below ↓
+    For more options, check the `Assets` sections below ↓
 
     ## Update
     Update to the latest version depends on how you choose to install `telegram-owl` on your machine.
@@ -177,19 +176,19 @@ winget:
       - telegram
       - cli
     # Repository to push the generated files to.
-    repository:
-      owner: beeyev
-      name: pkg
 #    repository:
-#      owner: beeyev-automation
-#      name: fork-winget-pkgs
-#      branch: "{{.ProjectName}}-{{.Version}}"
-#      pull_request:
-#        enabled: true
-#        base:
-#          owner: microsoft
-#          name: winget-pkgs
-#          branch: master
+#      owner: beeyev
+#      name: pkg
+    repository:
+      owner: beeyev-automation
+      name: fork-winget-pkgs
+      branch: "{{.ProjectName}}-{{.Version}}"
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
 
 chocolateys:
   -
@@ -212,5 +211,5 @@ chocolateys:
       {{ .ProjectName }} installer package.
       CLI utility to send messages and files to Telegram chats and channels
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
-    #api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"

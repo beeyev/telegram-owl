@@ -24,7 +24,7 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 ### macOS and Linux
 
 Install with [Homebrew](https://brew.sh/)
-```bash
+```console
 brew tap beeyev/pkg https://github.com/beeyev/pkg
 brew install telegram-owl
 ```
@@ -32,7 +32,7 @@ brew install telegram-owl
 ### Windows
 
 Install with [Scoop](https://scoop.sh/)
-```bash
+```console
 scoop bucket add beeyev https://github.com/beeyev/pkg
 scoop install telegram-owl
 ```
@@ -45,7 +45,7 @@ For Windows, Mac OS(10.12+) or Linux, you can download a binary release [here](h
 To start using **Telegram Owl**, you need to obtain a Telegram bot token and chat ID.
 You can learn how to get it [here](/docs/HowToTelegramBot.md).
 
-```bash
+```console
 telegram-owl \
   --token <bot-token> \
   --chat <chat-id or @channel> \
@@ -80,17 +80,17 @@ telegram-owl \
 
 ### ✅ Send a Simple Message
 
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c @mychannel -m "Server status: OK ✅"
 ```
 
 ### 📝 Send a Message with Markdown formatting
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c 123456 --format=markdown -m "*Bold text* via Markdown"
 ```
 
 ### 📝 Send a Message with HTML formatting
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c 123456 --format=html -m '<b>Bold text</b> via HTML and <a href="http://www.example.com/">inline URL</a>'
 ```
 
@@ -98,7 +98,7 @@ telegram-owl -t $BOT_TOKEN -c 123456 --format=html -m '<b>Bold text</b> via HTML
 
 ### 📎 Send Files with a Message
 
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c 123456 \
   -m "Daily report attached" \
   -a report.pdf,screenshot.png
@@ -106,7 +106,7 @@ telegram-owl -t $BOT_TOKEN -c 123456 \
 
 ### 🔕 Send a Protected, Silent Message
 
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c 123456 \
   -m "Confidential: Project roadmap" \
   --silent --protect
@@ -114,13 +114,13 @@ telegram-owl -t $BOT_TOKEN -c 123456 \
 
 ### 📤 Pipe Message from File or Command
 
-```bash
+```console
 cat message.txt | telegram-owl -t $BOT_TOKEN -c @devs --stdin
 ```
 
 ### 🧵 Post in a Forum Thread
 
-```bash
+```console
 telegram-owl -t $BOT_TOKEN -c @forumgroup --thread 67890 -m "New bug report 🐞"
 ```
 
@@ -128,7 +128,7 @@ telegram-owl -t $BOT_TOKEN -c @forumgroup --thread 67890 -m "New bug report 🐞
 
 Set environment variables to simplify usage:
 
-```bash
+```console
 export TELEGRAM_OWL_TOKEN="123:abc"
 export TELEGRAM_OWL_CHAT="112451"
 export TELEGRAM_OWL_THREAD="67890"
