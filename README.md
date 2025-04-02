@@ -23,7 +23,7 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 
 ### macOS and Linux
 
-Install with [Homebrew](https://brew.sh/)
+Install with [`Homebrew`](https://brew.sh/)
 ```console
 brew tap beeyev/pkg https://github.com/beeyev/pkg
 brew install telegram-owl
@@ -31,10 +31,15 @@ brew install telegram-owl
 
 ### Windows
 
-Install with [Scoop](https://scoop.sh/)
+Install with [`Scoop`](https://scoop.sh/)
 ```console
 scoop bucket add beeyev https://github.com/beeyev/pkg
 scoop install telegram-owl
+```
+
+Install with `winget`
+```console
+winget install telegram-owl
 ```
 
 ### Binary Releases
