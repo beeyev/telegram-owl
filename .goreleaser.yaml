@@ -63,15 +63,6 @@ checksum:
 changelog:
   disable: true
 
-upx:
-  - enabled: true
-    goos:
-      - linux
-      - windows
-    compress: best
-    lzma: true
-    brute: false
-
 report_sizes: true
 
 release:
@@ -95,7 +86,7 @@ release:
     ```console
     winget install telegram-owl
     ```
-    
+
     ## Anywhere else
     Alternatively, you can install the latest binary from this page.
 
@@ -105,79 +96,6 @@ release:
     Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
 
     For more options, check the `Assets` sections below ↓
-
-scoops:
-  -
-    commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
-    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
-    homepage: "https://github.com/beeyev/telegram-owl"
-    description: "CLI utility to send messages and files to Telegram chats and channels"
-    license: MIT
-    shortcuts: [["telegram-owl.exe", "telegram-owl"]]
-    repository:
-      owner: beeyev
-      name: pkg
-
-brews:
-  -
-    goarm: 7
-    commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    directory: Formula
-    homepage: "https://github.com/beeyev/telegram-owl"
-    description: "CLI utility to send messages and files to Telegram chats and channels"
-    license: "MIT"
-    test: |
-      assert_match version.to_s, shell_output("#{bin}/telegram-owl --version")
-    repository:
-      owner: beeyev
-      name: pkg
-
-winget:
-  -
-    publisher: Alexander Tebiev
-    short_description: "CLI utility to send messages and files to Telegram chats and channels"
-    license: "MIT"
-    publisher_url: "https://github.com/beeyev/telegram-owl"
-    publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
-    package_identifier: beeyev.telegram-owl
-    commit_author:
-      name: beeyev
-      email: bot@goreleaser.com
-    commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
-    # Path for the file inside the repository.
-    #
-    # Default: 'manifests/<lowercased first char of publisher>/<publisher>/<name>/<version>'.
-    path: "manifests/b/beeyev/telegram-owl/{{.Version}}"
-    homepage: "https://github.com/beeyev/telegram-owl"
-    description: "CLI utility to send messages and media files to Telegram chats and channels — directly from your terminal"
-    license_url: "https://github.com/beeyev/telegram-owl/blob/master/LICENSE"
-    copyright: "Alexander Tebiev"
-    copyright_url: "https://github.com/beeyev"
-    skip_upload: auto
-    release_notes: "{{.Changelog}}"
-    release_notes_url: "https://github.com/beeyev/telegram-owl/releases/tag/v{{.Version}}"
-    tags:
-      - telegram
-      - cli
-    # Repository to push the generated files to.
-#    repository:
-#      owner: beeyev
-#      name: pkg
-    repository:
-      owner: beeyev-automation
-      name: fork-winget-pkgs
-      branch: "{{.ProjectName}}-{{.Version}}"
-      pull_request:
-        enabled: true
-        base:
-          owner: microsoft
-          name: winget-pkgs
-          branch: master
 
 chocolateys:
   -
@@ -200,5 +118,5 @@ chocolateys:
       {{ .ProjectName }} installer package.
       CLI utility to send messages and files to Telegram chats and channels
     release_notes: "https://github.com/beeyev/telegram-owl/releases/tag/v{{ .Version }}"
-    #api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
