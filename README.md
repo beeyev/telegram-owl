@@ -63,8 +63,8 @@ telegram-owl \
 
 | Flag            | Description                     | Environment Variable        |
 |----------------|---------------------------------|-----------------------------|
-| `--token`, `-t`  | Telegram bot token             | `TELEGRAM_SEND_TOKEN`       |
-| `--chat`, `-c`   | Chat ID or `@username`        | `TELEGRAM_SEND_CHAT`        |
+| `--token`, `-t`  | Telegram bot token             | `TELEGRAM_OWL_TOKEN`       |
+| `--chat`, `-c`   | Chat ID or `@username`        | `TELEGRAM_OWL_CHAT`        |
 
 ### ⚙️ Common Flags
 
