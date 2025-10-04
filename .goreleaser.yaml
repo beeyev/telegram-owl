@@ -63,15 +63,6 @@ checksum:
 changelog:
   disable: true
 
-upx:
-  - enabled: true
-    goos:
-      - linux
-      - windows
-    compress: best
-    lzma: true
-    brute: false
-
 report_sizes: true
 
 release:
