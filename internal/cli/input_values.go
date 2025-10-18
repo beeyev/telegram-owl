@@ -17,7 +17,7 @@ func (iv *inputValues) validate() error {
 	if iv.cmd.String("token") == "" {
 		//nolint:stylecheck // Probably i need to render this message in a different way
 		return errors.New(`missing required flag: --token
-Set it via the --token flag or the TELEGRAM_SEND_TOKEN environment variable.
+Set it via the --token flag or the TELEGRAM_OWL_TOKEN environment variable.
 
 Example:
   telegram-owl --token=123:ABC
@@ -28,7 +28,7 @@ Run with --help to see all options.`)
 	if iv.cmd.String("chat") == "" {
 		//nolint:stylecheck // Probably i need to render this message in a different way
 		return errors.New(`missing required flag: --chat
-Set it via the --chat flag or the TELEGRAM_SEND_CHAT environment variable.
+Set it via the --chat flag or the TELEGRAM_OWL_CHAT environment variable.
 
 Example:
   telegram-owl --chat=31337
