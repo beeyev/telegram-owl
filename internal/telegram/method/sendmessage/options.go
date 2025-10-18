@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // MaxTextLength defines the maximum length allowed for a text message.
@@ -68,10 +69,10 @@ func (o *Options) validate() error {
 	if o.Text == "" {
 		validationErrors = append(validationErrors, "message is required")
 	}
-	if len(o.Text) > MaxTextLength {
+	if textLen := utf8.RuneCountInString(o.Text); textLen > MaxTextLength {
 		validationErrors = append(
 			validationErrors,
-			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxTextLength, len(o.Text)),
+			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxTextLength, textLen),
 		)
 	}
 

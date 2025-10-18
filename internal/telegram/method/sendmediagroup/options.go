@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	attach "github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
@@ -98,10 +99,10 @@ func (o *Options) validate() error {
 	if len(o.Attachments) == 0 {
 		validationErrors = append(validationErrors, "at least one attachment required")
 	}
-	if len(o.Caption) > MaxCaptionLength {
+	if captionLen := utf8.RuneCountInString(o.Caption); captionLen > MaxCaptionLength {
 		validationErrors = append(
 			validationErrors,
-			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxCaptionLength, len(o.Caption)),
+			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxCaptionLength, captionLen),
 		)
 	}
 
