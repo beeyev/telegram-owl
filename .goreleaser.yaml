@@ -74,7 +74,7 @@ release:
     ### Install with [`Homebrew`](https://brew.sh)
     ```console
     brew tap beeyev/pkg https://github.com/beeyev/pkg
-    brew install telegram-owl
+    brew install --cask telegram-owl
     ```
     ## Windows
     ### Install with [`Scoop`](https://scoop.sh)
@@ -86,7 +86,7 @@ release:
     ```console
     winget install telegram-owl
     ```
-    
+
     ## Anywhere else
     Alternatively, you can install the latest binary from this page.
 
@@ -111,22 +111,27 @@ scoops:
       owner: beeyev
       name: pkg
 
-brews:
+homebrew_casks:
   -
-    goarm: 7
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    directory: Formula
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
-    license: "MIT"
-    test: |
-      assert_match version.to_s, shell_output("#{bin}/telegram-owl --version")
+    caveats: "run 'telegram-owl --help' to get started"
+    url:
+      template: "https://github.com/beeyev/telegram-owl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     repository:
       owner: beeyev
       name: pkg
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/telegram-owl"]
+          end
+
 
 winget:
   -

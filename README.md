@@ -26,7 +26,19 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 Install with [`Homebrew`](https://brew.sh/)
 ```console
 brew tap beeyev/pkg https://github.com/beeyev/pkg
-brew install telegram-owl
+brew install --cask telegram-owl
+```
+
+**⚠️ macOS Security Note:**
+
+If macOS blocks the app with "cannot be opened because the developer cannot be verified":
+
+```bash
+# Option 1: Remove quarantine attribute
+xattr -d com.apple.quarantine /opt/homebrew/bin/telegram-owl
+
+# Option 2: Allow in System Settings
+# Go to: System Settings > Privacy & Security > Allow "telegram-owl"
 ```
 
 ### Windows
