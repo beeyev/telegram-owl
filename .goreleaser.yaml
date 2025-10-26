@@ -97,6 +97,30 @@ release:
 
     For more options, check the `Assets` sections below ↓
 
+dockers_v2:
+  -
+    dockerfile: Dockerfile
+    images:
+      - "ghcr.io/beeyev/telegram-owl"
+      - "docker.io/beeyev/telegram-owl"
+      - "quay.io/beeyev/telegram-owl"
+    tags:
+      - "{{.Version}}"
+      - "{{.Major}}"
+      - "{{.Major}}.{{.Minor}}"
+      - latest
+    platforms:
+      - linux/386
+      - linux/amd64
+      - linux/arm64
+      - linux/arm/v7
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+
 scoops:
   -
     commit_author:
