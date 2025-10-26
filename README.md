@@ -57,6 +57,21 @@ winget install telegram-owl
 ### Binary Releases
 For Windows, Mac OS(10.12+) or Linux, you can download a binary release [here](https://github.com/beeyev/telegram-owl/releases/latest).
 
+### Docker
+Official multi-architecture images live on [Docker Hub](https://hub.docker.com/r/beeyev/telegram-owl), [GHCR](https://github.com/beeyev/telegram-owl/pkgs/container/telegram-owl), and [Quay](https://quay.io/repository/beeyev/telegram-owl). Pull the tag you need and run the CLI directly:
+
+```console
+docker run --rm ghcr.io/beeyev/telegram-owl:latest --help
+```
+
+Need the binary inside your own image? Copy it from the published image via a multistage Dockerfile:
+
+```Dockerfile
+COPY --from=beeyev/telegram-owl:latest /usr/bin/telegram-owl /usr/local/bin/telegram-owl
+```
+
+This reuses the official build without compiling from source.
+
 ## 🚀 Usage
 
 To start using **Telegram Owl**, you need to obtain a Telegram bot token and chat ID.
