@@ -95,7 +95,37 @@ release:
     Download for Linux [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_32bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM64.tar.gz) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM.tar.gz)
     Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
 
+    ## Docker
+    Multi-arch images are available on GHCR, Docker Hub, and Quay:
+    ```console
+    docker pull ghcr.io/beeyev/telegram-owl:{{.Version}}
+    ```
+
     For more options, check the `Assets` sections below ↓
+
+dockers_v2:
+  -
+    dockerfile: Dockerfile
+    images:
+      - "ghcr.io/beeyev/telegram-owl"
+      - "docker.io/beeyev/telegram-owl"
+      - "quay.io/beeyev/telegram-owl"
+    tags:
+      - "{{.Version}}"
+      - "{{.Major}}"
+      - "{{.Major}}.{{.Minor}}"
+      - latest
+    platforms:
+      - linux/386
+      - linux/amd64
+      - linux/arm64
+      - linux/arm/v7
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
 
 scoops:
   -
