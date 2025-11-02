@@ -42,6 +42,13 @@ func flags() []cli.Flag {
 			Config:   cli.StringConfig{TrimSpace: true},
 		},
 		&cli.StringFlag{
+			Name:     "proxy",
+			Usage:    "Proxy URL for outgoing requests, environment variable:",
+			OnlyOnce: true,
+			Sources:  cli.EnvVars("TELEGRAM_OWL_PROXY"),
+			Config:   cli.StringConfig{TrimSpace: true},
+		},
+		&cli.StringFlag{
 			Name:     "message",
 			Usage:    "Text message content. Use --stdin to read from standard input.",
 			Aliases:  []string{"m"},
@@ -132,7 +139,7 @@ func NewApp(apiBotURL string) *cli.Command {
 				return err
 			}
 
-			telegramClient, err := telegram.NewClient(apiBotURL, cmd.String("token"))
+			telegramClient, err := telegram.NewClient(apiBotURL, cmd.String("token"), cmd.String("proxy"))
 			if err != nil {
 				return fmt.Errorf("failed to create Telegram client: %w", err)
 			}

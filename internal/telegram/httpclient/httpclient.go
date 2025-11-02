@@ -22,7 +22,7 @@ type errorResponse struct {
 	Description string `json:"description,omitempty"`
 }
 
-func New(apiBotURL, token string) (HTTPDoer, error) {
+func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 	if apiBotURL == "" {
 		return nil, errors.New("apiBotURL value is not provided")
 	}
@@ -39,6 +39,14 @@ func New(apiBotURL, token string) (HTTPDoer, error) {
 	restyClient := resty.New().
 		// SetDebug(true).
 		SetBaseURL(baseURLWithToken)
+
+	if proxyURL != "" {
+		if _, err = url.ParseRequestURI(proxyURL); err != nil {
+			return nil, fmt.Errorf("invalid proxy URL: %w", err)
+		}
+
+		restyClient.SetProxy(proxyURL)
+	}
 
 	return httpClient{
 		restyClient: restyClient,
