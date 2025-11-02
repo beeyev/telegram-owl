@@ -11,8 +11,8 @@ type Client struct {
 	SendMediaGroup sendmediagroup.Sender
 }
 
-func NewClient(apiBotURL, token string) (*Client, error) {
-	httpClient, err := httpclient.New(apiBotURL, token)
+func NewClient(apiBotURL, token, proxyURL string) (*Client, error) {
+	httpClient, err := httpclient.New(apiBotURL, token, proxyURL)
 	if err != nil {
 		return nil, err
 	}

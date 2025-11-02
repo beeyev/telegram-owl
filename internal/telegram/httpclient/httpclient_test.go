@@ -14,21 +14,27 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Run("should return error if baseURL is empty", func(t *testing.T) {
-		client, err := httpclient.New("", "token")
+		client, err := httpclient.New("", "token", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "apiBotURL value is not provided")
 	})
 
 	t.Run("should return error if token is empty", func(t *testing.T) {
-		client, err := httpclient.New("http://example.com", "")
+		client, err := httpclient.New("http://example.com", "", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "token value is not provided")
 	})
 
 	t.Run("should return httpClient if baseURL and token are provided", func(t *testing.T) {
-		client, err := httpclient.New("http://example.com", "token")
+		client, err := httpclient.New("http://example.com", "token", "")
 		assert.NotNil(t, client)
 		assert.NoError(t, err)
+	})
+
+	t.Run("should return error if proxy is invalid", func(t *testing.T) {
+		client, err := httpclient.New("http://example.com", "token", "://bad_proxy")
+		assert.Nil(t, client)
+		assert.EqualError(t, err, "invalid proxy URL: parse \"://bad_proxy\": missing protocol scheme")
 	})
 }
 
@@ -58,7 +64,7 @@ func TestSubmitJSON_Success(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
@@ -99,7 +105,7 @@ func TestSubmitMultipart_Success(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
@@ -123,7 +129,7 @@ func TestErrorHandling_NetworkTransportError(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
 	mockServer.Close() // close immediately
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
@@ -141,7 +147,7 @@ func TestErrorHandling_APIError(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
@@ -161,7 +167,7 @@ func TestErrorHandling_EmptyResponse(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
@@ -180,7 +186,7 @@ func TestExecuteRequest_UnexpectedError(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	client, err := httpclient.New(mockServer.URL, "to:ken")
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
 	require.NotNil(t, client)
 	require.NoError(t, err)
 

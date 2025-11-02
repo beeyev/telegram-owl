@@ -16,6 +16,7 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 - 🧵 Send to forum thread topics
 - 📤 Read input from `stdin`
 - 📌 Set environment variables for easy usage
+- 🌐 Configure HTTP or SOCKS5 proxy
 - 🐧 Cross-platform support (Windows, Mac, Linux)
 - 🚀 Fast and lightweight (written in Go)
 
@@ -107,6 +108,7 @@ telegram-owl \
 | `--protect`            | Prevent forwarding and saving of content                      |
 | `--no-link-preview`    | Disable automatic link previews in messages                   |
 | `--thread`             | Thread ID for forum supergroup topics                         |
+| `--proxy`              | Proxy URL (HTTP/HTTPS/SOCKS5) for outbound requests           |
 
 ## 📌 Examples
 
@@ -164,7 +166,29 @@ Set environment variables to simplify usage:
 export TELEGRAM_OWL_TOKEN="123:abc"
 export TELEGRAM_OWL_CHAT="112451"
 export TELEGRAM_OWL_THREAD="67890"
+export TELEGRAM_OWL_PROXY="http://proxy.example.com:8080"
 ```
+
+### 🌐 Proxy Configuration
+
+> `telegram-owl` can route requests through a proxy. Supply the proxy via `--proxy` or the `TELEGRAM_OWL_PROXY` environment variable. Proxy handling is powered by [Resty](https://github.com/go-resty/resty) under the hood, so any scheme supported by Resty (`http`, `https`, `socks5`) works here.
+
+- HTTP(S) proxy:
+```console
+telegram-owl --proxy http://proxy.local:3128 -t $BOT_TOKEN -c @channel -m "Hello via proxy"`
+```
+
+- SOCKS5 proxy:
+```console
+telegram-owl --proxy socks5://127.0.0.1:1080 -t $BOT_TOKEN -c @channel -m "Hello via SOCKS5"
+```
+
+- Authenticated proxy:
+```console
+telegram-owl --proxy http://user:pass@proxy.local:8080 -t $BOT_TOKEN -c @channel -m "Hello with auth proxy"
+```
+
+Authentication is supported by embedding credentials in the URL, e.g. `http://user:pass@proxy.local:3128`.
 
 ## 📏 Attachment Limits
 
