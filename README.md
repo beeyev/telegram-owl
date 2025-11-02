@@ -171,11 +171,22 @@ export TELEGRAM_OWL_PROXY="http://proxy.example.com:8080"
 
 ### 🌐 Proxy Configuration
 
-Telegram Owl can route requests through a proxy. Supply the proxy via `--proxy` or the `TELEGRAM_OWL_PROXY` environment variable.
+> `telegram-owl` can route requests through a proxy. Supply the proxy via `--proxy` or the `TELEGRAM_OWL_PROXY` environment variable. Proxy handling is powered by [Resty](https://github.com/go-resty/resty) under the hood, so any scheme supported by Resty (`http`, `https`, `socks5`) works here.
 
-- HTTP(S) proxy:<br>`telegram-owl --proxy http://proxy.local:3128 -t $BOT_TOKEN -c @channel -m "Hello via proxy"`
-- SOCKS5 proxy:<br>`telegram-owl --proxy socks5://127.0.0.1:1080 -t $BOT_TOKEN -c @channel -m "Hello via SOCKS5"`
-- Authenticated proxy:<br>`telegram-owl --proxy http://user:pass@proxy.local:8080 -t $BOT_TOKEN -c @channel -m "Hello with auth proxy"`
+- HTTP(S) proxy:
+```console
+telegram-owl --proxy http://proxy.local:3128 -t $BOT_TOKEN -c @channel -m "Hello via proxy"`
+```
+
+- SOCKS5 proxy:
+```console
+telegram-owl --proxy socks5://127.0.0.1:1080 -t $BOT_TOKEN -c @channel -m "Hello via SOCKS5"
+```
+
+- Authenticated proxy:
+```console
+telegram-owl --proxy http://user:pass@proxy.local:8080 -t $BOT_TOKEN -c @channel -m "Hello with auth proxy"
+```
 
 Authentication is supported by embedding credentials in the URL, e.g. `http://user:pass@proxy.local:3128`.
 
