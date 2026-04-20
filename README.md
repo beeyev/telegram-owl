@@ -6,21 +6,21 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 
 ---
 
-## ✨ Features
+## Features
 
-- 📨 Send text messages
-- 📎 Attach multiple files
-- 🔕 Silent messages (no notification sound)
-- 🛡️ Protect messages (disable forwarding/saving)
-- 📸 Automatic media type detection (or force as document)
-- 🧵 Send to forum thread topics
-- 📤 Read input from `stdin`
-- 📌 Set environment variables for easy usage
-- 🌐 Configure HTTP or SOCKS5 proxy
-- 🐧 Cross-platform support (Windows, Mac, Linux)
-- 🚀 Fast and lightweight (written in Go)
+- Send text messages
+- Attach multiple files
+- Silent messages (no notification sound)
+- Protect messages (disable forwarding/saving)
+- Automatic media type detection (or force as document)
+- Send to forum thread topics
+- Read input from `stdin`
+- Set environment variables for easy usage
+- Configure HTTP or SOCKS5 proxy
+- Cross-platform support (Windows, Mac, Linux)
+- Fast and lightweight (written in Go)
 
-## 📦 Installation
+## Installation
 
 ### macOS and Linux
 
@@ -112,25 +112,25 @@ telegram-owl \
 
 ## 📌 Examples
 
-### ✅ Send a Simple Message
+### Send a Simple Message
 
 ```console
 telegram-owl -t $BOT_TOKEN -c @mychannel -m "Server status: OK ✅"
 ```
 
-### 📝 Send a Message with Markdown formatting
+### Send a Message with Markdown formatting
 ```console
 telegram-owl -t $BOT_TOKEN -c 123456 --format=markdown -m "*Bold text* via Markdown"
 ```
 
-### 📝 Send a Message with HTML formatting
+### Send a Message with HTML formatting
 ```console
 telegram-owl -t $BOT_TOKEN -c 123456 --format=html -m '<b>Bold text</b> via HTML and <a href="http://www.example.com/">inline URL</a>'
 ```
 
 > Message formatting is supported for both `markdown` and `html` formats. But it does not work when text and files are sent together.
 
-### 📎 Send Files with a Message
+### Send Files with a Message
 
 ```console
 telegram-owl -t $BOT_TOKEN -c 123456 \
@@ -138,7 +138,7 @@ telegram-owl -t $BOT_TOKEN -c 123456 \
   -a report.pdf,screenshot.png
 ```
 
-### 🔕 Send a Protected, Silent Message
+### Send a Protected, Silent Message
 
 ```console
 telegram-owl -t $BOT_TOKEN -c 123456 \
@@ -146,13 +146,13 @@ telegram-owl -t $BOT_TOKEN -c 123456 \
   --silent --protect
 ```
 
-### 📤 Pipe Message from File or Command
+### Pipe Message from File or Command
 
 ```console
 cat message.txt | telegram-owl -t $BOT_TOKEN -c @devs --stdin
 ```
 
-### 🧵 Post in a Forum Thread
+### Post in a Forum Thread
 
 ```console
 telegram-owl -t $BOT_TOKEN -c @forumgroup --thread 67890 -m "New bug report 🐞"
@@ -169,7 +169,7 @@ export TELEGRAM_OWL_THREAD="67890"
 export TELEGRAM_OWL_PROXY="http://proxy.example.com:8080"
 ```
 
-### 🌐 Proxy Configuration
+### Proxy Configuration
 
 > `telegram-owl` can route requests through a proxy. Supply the proxy via `--proxy` or the `TELEGRAM_OWL_PROXY` environment variable. Proxy handling is powered by [Resty](https://github.com/go-resty/resty) under the hood, so any scheme supported by Resty (`http`, `https`, `socks5`) works here.
 
