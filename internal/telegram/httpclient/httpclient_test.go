@@ -197,9 +197,10 @@ func TestExecuteRequest_UnexpectedError(t *testing.T) {
 }
 
 func TestSubmitJSON_ContextCanceled(t *testing.T) {
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		<-r.Context().Done()
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok": true}`))
 	}))
 	defer mockServer.Close()
 

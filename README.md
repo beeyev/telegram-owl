@@ -96,8 +96,8 @@ telegram-owl \
 
 ### ⚙️ Common Flags
 
-| Flag                  | Description                                                    |
-|-----------------------|----------------------------------------------------------------|
+| Flag                  | Description                                                   |
+|-----------------------|---------------------------------------------------------------|
 | `--message`, `-m`      | Text message to send                                          |
 | `--format`, `-f`         | Message format options, possible values: `markdown`, `html` |
 | `--stdin`              | Read message content from `stdin`                             |
@@ -109,6 +109,7 @@ telegram-owl \
 | `--no-link-preview`    | Disable automatic link previews in messages                   |
 | `--thread`             | Thread ID for forum supergroup topics                         |
 | `--proxy`              | Proxy URL (HTTP/HTTPS/SOCKS5) for outbound requests           |
+| `--verbose`            | Print detailed logs for debugging purposes                    |
 
 ## 📌 Examples
 
