@@ -1,6 +1,7 @@
 package httpclient_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -68,7 +69,7 @@ func TestSubmitJSON_Success(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "method-a", map[string]string{
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "method-a", map[string]string{
 		"foo": "bar",
 	})
 	require.NoError(t, err, "SubmitJSON should succeed when the server returns ok=true")
@@ -119,7 +120,7 @@ func TestSubmitMultipart_Success(t *testing.T) {
 	}
 	fields := map[string]string{"foo": "bar"}
 
-	err = client.SubmitMultipart(http.MethodPost, "method-b", fields, []httpclient.MultipartFile{multipartFile})
+	err = client.SubmitMultipart(t.Context(), http.MethodPost, "method-b", fields, []httpclient.MultipartFile{multipartFile})
 	require.NoError(t, err)
 }
 
@@ -133,7 +134,7 @@ func TestErrorHandling_NetworkTransportError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "method-a", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "method-a", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "transport error:")
 }
@@ -151,7 +152,7 @@ func TestErrorHandling_APIError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "/method-a", map[string]string{
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "/method-a", map[string]string{
 		"foo": "bar",
 	})
 	require.Error(t, err)
@@ -171,7 +172,7 @@ func TestErrorHandling_EmptyResponse(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "/test-json", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "/test-json", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected error (status=403): <empty response body>")
 }
@@ -190,7 +191,26 @@ func TestExecuteRequest_UnexpectedError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodGet, "/test-json", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodGet, "/test-json", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected error (status=403): some weird error")
+}
+
+func TestSubmitJSON_ContextCanceled(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-r.Context().Done()
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer mockServer.Close()
+
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
+	require.NotNil(t, client)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err = client.SubmitJSON(ctx, http.MethodPost, "/test-json", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "context canceled")
 }

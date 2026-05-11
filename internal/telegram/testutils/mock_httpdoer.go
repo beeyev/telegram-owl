@@ -1,6 +1,10 @@
 package testutils
 
-import "github.com/beeyev/telegram-owl/internal/telegram/httpclient"
+import (
+	"context"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
+)
 
 // MockHTTPDoer.
 type MockHTTPDoer struct {
@@ -22,6 +26,7 @@ type submitJSONPayload struct {
 }
 
 func (c *MockHTTPDoer) SubmitMultipart(
+	_ context.Context,
 	method,
 	endpoint string,
 	fields map[string]string,
@@ -37,7 +42,7 @@ func (c *MockHTTPDoer) SubmitMultipart(
 	return nil
 }
 
-func (c *MockHTTPDoer) SubmitJSON(method, endpoint string, body any) error {
+func (c *MockHTTPDoer) SubmitJSON(_ context.Context, method, endpoint string, body any) error {
 	c.SubmitJSONResult = append(c.SubmitJSONResult, submitJSONPayload{
 		Method:   method,
 		Endpoint: endpoint,

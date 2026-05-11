@@ -37,7 +37,7 @@ func TestSend_ValidationErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sender := sendmessage.New(testutils.NewMockHTTPDoer())
-			err := sender.Send(&tt.options)
+			err := sender.Send(t.Context(), &tt.options)
 			require.Error(t, err)
 			for _, expectedError := range tt.expectedErrors {
 				assert.Containsf(t, err.Error(), expectedError, "expected error not found")
@@ -55,7 +55,7 @@ func TestSend_Success(t *testing.T) {
 		Text:   "Hello, world!",
 	}
 
-	err := sender.Send(options)
+	err := sender.Send(t.Context(), options)
 	require.NoError(t, err)
 
 	require.Len(t, mockHTTPClient.SubmitJSONResult, 1)

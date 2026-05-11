@@ -1,12 +1,16 @@
 package httpclient
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"resty.dev/v3"
 )
+
+const defaultRequestTimeout = 30 * time.Second
 
 type httpClient struct {
 	restyClient *resty.Client
@@ -38,7 +42,8 @@ func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 
 	restyClient := resty.New().
 		// SetDebug(true).
-		SetBaseURL(baseURLWithToken)
+		SetBaseURL(baseURLWithToken).
+		SetTimeout(defaultRequestTimeout)
 
 	if proxyURL != "" {
 		if _, err = url.ParseRequestURI(proxyURL); err != nil {
@@ -53,7 +58,13 @@ func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 	}, nil
 }
 
-func (c httpClient) SubmitMultipart(method, endpoint string, fields map[string]string, files []MultipartFile) error {
+func (c httpClient) SubmitMultipart(
+	ctx context.Context,
+	method,
+	endpoint string,
+	fields map[string]string,
+	files []MultipartFile,
+) error {
 	request := c.restyClient.R()
 	request.SetMultipartFormData(fields)
 
@@ -61,22 +72,27 @@ func (c httpClient) SubmitMultipart(method, endpoint string, fields map[string]s
 		request.SetFileReader(mFile.FieldName, mFile.FileName, mFile.FileReader)
 	}
 
-	return c.executeRequest(method, endpoint, request)
+	return c.executeRequest(ctx, method, endpoint, request)
 }
 
-func (c httpClient) SubmitJSON(method, endpoint string, body any) error {
+func (c httpClient) SubmitJSON(ctx context.Context, method, endpoint string, body any) error {
 	request := c.restyClient.R()
 	request.SetBody(body)
 
-	return c.executeRequest(method, endpoint, request)
+	return c.executeRequest(ctx, method, endpoint, request)
 }
 
 // executeRequest executes the request and handles the response.
-func (c httpClient) executeRequest(method, endpoint string, request *resty.Request) error {
+func (c httpClient) executeRequest(ctx context.Context, method, endpoint string, request *resty.Request) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	successPayload := &successResponse{}
 	errorPayload := &errorResponse{}
 
 	resp, err := request.
+		SetContext(ctx).
 		SetResult(successPayload).
 		SetError(errorPayload).
 		Execute(method, endpoint)

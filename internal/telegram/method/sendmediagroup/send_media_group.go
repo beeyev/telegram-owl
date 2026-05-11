@@ -1,6 +1,7 @@
 package sendmediagroup
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -12,7 +13,7 @@ const telegramAPIEndpoint = "sendMediaGroup"
 
 // Sender provides an interface for sending text messages to a Telegram chat.
 type Sender interface {
-	Send(opts *Options) error
+	Send(ctx context.Context, opts *Options) error
 }
 
 type mediaSender struct {
@@ -26,7 +27,7 @@ func New(httpClient httpclient.HTTPDoer) Sender {
 
 // Send sends a group of photos, videos, documents or audios as an album
 // See: https://core.telegram.org/bots/api#sendmediagroup
-func (s mediaSender) Send(opts *Options) error {
+func (s mediaSender) Send(ctx context.Context, opts *Options) error {
 	payloadData, multipartFiles, err := opts.preparePayload()
 	if err != nil {
 		return fmt.Errorf("send media: %w", err)
@@ -39,7 +40,7 @@ func (s mediaSender) Send(opts *Options) error {
 	}
 
 	// Submit the multipart/form-data request to Telegram
-	if err = s.httpClient.SubmitMultipart(http.MethodPost, telegramAPIEndpoint, formFields, multipartFiles); err != nil {
+	if err = s.httpClient.SubmitMultipart(ctx, http.MethodPost, telegramAPIEndpoint, formFields, multipartFiles); err != nil {
 		return fmt.Errorf("failed to send media: %w", err)
 	}
 

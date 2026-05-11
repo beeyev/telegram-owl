@@ -154,6 +154,7 @@ func NewApp(apiBotURL string) *cli.Command {
 			}
 
 			a := &action{
+				ctx:              ctx,
 				client:           telegramClient,
 				attachLoader:     attachLoader,
 				chatID:           cmd.String("chat"),
