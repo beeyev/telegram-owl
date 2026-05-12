@@ -9,6 +9,9 @@ help: ## Show this help
 build: ## Build binary
 	go build -ldflags "-s -w"
 
+release-local: ## Build local snapshot release without publishing
+	GORELEASER_LOCAL=1 goreleaser release --snapshot --clean --skip=before
+
 mod: ## go mod tidy
 	go mod tidy
 

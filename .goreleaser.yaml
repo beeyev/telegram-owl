@@ -104,8 +104,12 @@ release:
     For more options, check the `Assets` sections below ↓
 
 dockers_v2:
+  # Full multi-platform image build used by CI/CD releases.
+  # Disabled only for local smoke tests, where ARM emulation can be unavailable or slow.
   -
+    id: image
     dockerfile: Dockerfile
+    disable: '{{ eq (index .Env "GORELEASER_LOCAL") "1" }}'
     images:
       - "ghcr.io/beeyev/telegram-owl"
       - "docker.io/beeyev/telegram-owl"
@@ -126,6 +130,20 @@ dockers_v2:
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{.Version}}"
       "org.opencontainers.image.source": "{{.GitURL}}"
+
+  # Local smoke-test image build used by `make release-local`.
+  # It builds only linux/amd64 so Docker packaging can be tested without ARM buildx setup.
+  -
+    id: image-local
+    dockerfile: Dockerfile
+    disable: '{{ ne (index .Env "GORELEASER_LOCAL") "1" }}'
+    images:
+      - "ghcr.io/beeyev/telegram-owl-local"
+    tags:
+      - latest
+    platforms:
+      - linux/amd64
+
 
 scoops:
   -
