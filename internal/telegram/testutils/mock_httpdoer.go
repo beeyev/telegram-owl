@@ -6,7 +6,7 @@ import (
 	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 )
 
-// MockHTTPDoer.
+// MockHTTPDoer records HTTP requests made by tests.
 type MockHTTPDoer struct {
 	SubmitMultipartResult []submitMultipartPayload
 	SubmitJSONResult      []submitJSONPayload
