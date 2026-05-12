@@ -24,7 +24,11 @@ builds:
     ignore:
       - goos: darwin
         goarch: 386
+      - goos: darwin
+        goarch: arm
       - goos: freebsd
+        goarch: arm
+      - goos: windows
         goarch: arm
     goarm:
       - 7
@@ -91,9 +95,9 @@ release:
     Alternatively, you can install the latest binary from this page.
 
     ### Manual downloads
-    Download for Windows [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_64bit.zip) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_32bit.zip) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_ARM64.zip) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_ARM.zip)
+    Download for Windows [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_64bit.zip) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_32bit.zip) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Windows_ARM64.zip)
     Download for Linux [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_32bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM64.tar.gz) / [Arm](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_Linux_ARM.tar.gz)
-    Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [32bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
+    Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
 
     ## Docker
     Multi-arch images are available on GHCR, Docker Hub, and Quay:
