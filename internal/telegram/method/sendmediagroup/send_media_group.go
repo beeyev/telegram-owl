@@ -40,7 +40,13 @@ func (s mediaSender) Send(ctx context.Context, opts *Options) error {
 	}
 
 	// Submit the multipart/form-data request to Telegram
-	if err = s.httpClient.SubmitMultipart(ctx, http.MethodPost, telegramAPIEndpoint, formFields, multipartFiles); err != nil {
+	if err = s.httpClient.SubmitMultipart(
+		ctx,
+		http.MethodPost,
+		telegramAPIEndpoint,
+		formFields,
+		multipartFiles,
+	); err != nil {
 		return fmt.Errorf("failed to send media: %w", err)
 	}
 

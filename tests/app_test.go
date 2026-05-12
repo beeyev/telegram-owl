@@ -100,8 +100,15 @@ func TestSendMessage_Success(t *testing.T) {
 			expectedJSONPayload: `{"chat_id":"75757","text":"Hello","parse_mode":"html"}`,
 		},
 		{
-			name:                "verbose success output",
-			args:                []string{"--token=123:abc", "--chat=75757", "--message=Hello", "--format=html", "--thread=1234", "--verbose=true"},
+			name: "verbose success output",
+			args: []string{
+				"--token=123:abc",
+				"--chat=75757",
+				"--message=Hello",
+				"--format=html",
+				"--thread=1234",
+				"--verbose=true",
+			},
 			expectedJSONPayload: `{"chat_id":"75757","message_thread_id":"1234","text":"Hello","parse_mode":"html"}`,
 			expectedOutput:      "Sending Telegram message: chat=75757, message=yes, attachments=0, thread=1234, format=html\nMessage sent successfully. Chat ID: 75757. Duration: ",
 		},

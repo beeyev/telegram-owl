@@ -37,7 +37,10 @@ func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error
 			// TODO find better way to close attachments
 			attachment.Close()
 			attachments.Close()
-			return nil, fmt.Errorf("total attachments size exceeds the max allowed %d MB", bytesToMegabytes(l.MaxTotalSizeBytes))
+			return nil, fmt.Errorf(
+				"total attachments size exceeds the max allowed %d MB",
+				bytesToMegabytes(l.MaxTotalSizeBytes),
+			)
 		}
 
 		attachments = append(attachments, attachment)

@@ -120,7 +120,13 @@ func TestSubmitMultipart_Success(t *testing.T) {
 	}
 	fields := map[string]string{"foo": "bar"}
 
-	err = client.SubmitMultipart(t.Context(), http.MethodPost, "method-b", fields, []httpclient.MultipartFile{multipartFile})
+	err = client.SubmitMultipart(
+		t.Context(),
+		http.MethodPost,
+		"method-b",
+		fields,
+		[]httpclient.MultipartFile{multipartFile},
+	)
 	require.NoError(t, err)
 }
 
