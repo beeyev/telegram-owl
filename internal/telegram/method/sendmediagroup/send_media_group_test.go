@@ -126,6 +126,7 @@ func TestSend_Success2(t *testing.T) {
 				ChatID:              "123",
 				MessageThreadID:     "456",
 				Caption:             "hello",
+				ParseMode:           "html",
 				HasSpoiler:          true,
 				DisableNotification: true,
 				ProtectContent:      true,
@@ -150,7 +151,27 @@ func TestSend_Success2(t *testing.T) {
 				"disable_notification": "1",
 				"protect_content":      "1",
 				//nolint:lll // Long line, but ok
-				"media": `[{"type":"document","media":"attach://file0","has_spoiler":true},{"type":"audio","media":"attach://file1","caption":"hello","has_spoiler":true}]`,
+				"media": `[{"type":"document","media":"attach://file0","has_spoiler":true},{"type":"audio","media":"attach://file1","caption":"hello","parse_mode":"html","has_spoiler":true}]`,
+			},
+		},
+		{
+			name: "markdown parse mode is normalized for captions",
+			options: &sendmediagroup.Options{
+				ChatID:    "123",
+				Caption:   "*hello*",
+				ParseMode: "markdown",
+				Attachments: attachment.Attachments{
+					{
+						AType:     attachment.Photo,
+						FileName:  "file1.jpg",
+						SizeBytes: 1024,
+						File:      dummyFile,
+					},
+				},
+			},
+			expected: map[string]string{
+				"chat_id": "123",
+				"media":   `[{"type":"photo","media":"attach://file0","caption":"*hello*","parse_mode":"MarkdownV2"}]`,
 			},
 		},
 	}

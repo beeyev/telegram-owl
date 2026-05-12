@@ -187,6 +187,7 @@ func TestSendMediaGroup_Success(t *testing.T) {
 		urlPath     string
 		method      string
 		contentType string
+		media       string
 	}
 
 	captured := capturedMultipartRequest{}
@@ -195,6 +196,11 @@ func TestSendMediaGroup_Success(t *testing.T) {
 		captured.urlPath = r.URL.Path
 		captured.method = r.Method
 		captured.contentType = r.Header.Get("Content-Type")
+		if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		captured.media = r.FormValue("media")
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -212,7 +218,8 @@ func TestSendMediaGroup_Success(t *testing.T) {
 		"--token=123:abc",
 		"--chat=75757",
 		"--attach=" + photoFile1.Name(),
-		"--message=Hello",
+		"--message=*Hello*",
+		"--format=markdown",
 		"--as-document=true",
 		"--silent=true",
 		"--spoiler=true",
@@ -227,6 +234,76 @@ func TestSendMediaGroup_Success(t *testing.T) {
 	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, captured.urlPath)
 	assert.Exactly(t, http.MethodPost, captured.method)
 	assert.Contains(t, captured.contentType, "multipart/form-data")
+	expectedMedia := `[{
+		"type":"document",
+		"media":"attach://file0",
+		"caption":"*Hello*",
+		"parse_mode":"MarkdownV2",
+		"has_spoiler":true
+	}]`
+	assert.JSONEq(t, expectedMedia, captured.media)
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendMediaGroup_LongMessageSendsTextSeparately(t *testing.T) {
+	t.Parallel()
+
+	type capturedRequest struct {
+		urlPath string
+		body    string
+		media   string
+	}
+
+	var captured []capturedRequest
+
+	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		req := capturedRequest{urlPath: r.URL.Path}
+		if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+			if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			req.media = r.FormValue("media")
+		} else {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if !assert.NoError(t, err) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			req.body = strings.TrimSpace(string(bodyBytes))
+		}
+		captured = append(captured, req)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	})
+
+	app := cli.NewApp(mockServer.URL)
+	app.Writer = outputBuf
+
+	photoFile1, err := os.CreateTemp(t.TempDir(), "photo1.jpg")
+	require.NoError(t, err)
+	defer photoFile1.Close()
+
+	message := strings.Repeat("a", 1025)
+	args := getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + photoFile1.Name(),
+		"--message=" + message,
+		"--format=html",
+		"--as-document=true",
+	})
+
+	err = app.Run(t.Context(), args)
+	require.NoError(t, err)
+
+	require.Len(t, captured, 2)
+	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, captured[0].urlPath)
+	assert.JSONEq(t, `[{"type":"document","media":"attach://file0"}]`, captured[0].media)
+	assert.Exactly(t, `/bot123:abc/sendMessage`, captured[1].urlPath)
+	assert.JSONEq(t, `{"chat_id":"75757","text":"`+message+`","parse_mode":"html"}`, captured[1].body)
 	assert.Empty(t, outputBuf.String())
 }
 
