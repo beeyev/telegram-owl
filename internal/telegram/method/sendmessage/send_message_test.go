@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
-	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
+	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
 )
 
 func TestSend_ValidationErrors(t *testing.T) {

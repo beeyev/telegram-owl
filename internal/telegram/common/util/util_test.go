@@ -3,9 +3,10 @@ package util_test
 import (
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/util"
 )
 
 func TestStructToFormPayload_Positive(t *testing.T) {

@@ -3,8 +3,9 @@ package attachment_test
 import (
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 )
 
 func TestDetectType(t *testing.T) {

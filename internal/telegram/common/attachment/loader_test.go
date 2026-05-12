@@ -3,9 +3,10 @@ package attachment_test
 import (
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 )
 
 func TestLoadMultipleAttachments_EmptyFiles(t *testing.T) {

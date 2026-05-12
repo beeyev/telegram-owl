@@ -4,11 +4,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmediagroup"
 	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSend_ValidationErrors(t *testing.T) {

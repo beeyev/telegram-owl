@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 )
 
 func TestNew(t *testing.T) {

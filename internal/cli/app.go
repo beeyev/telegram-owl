@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/urfave/cli/v3"
+
 	"github.com/beeyev/telegram-owl/internal/telegram"
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/version"
-	"github.com/urfave/cli/v3"
 )
 
 const author = "Alexander Tebiev - https://github.com/beeyev"
