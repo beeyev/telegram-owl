@@ -22,4 +22,4 @@ test: ## Run tests
 	go test ./...
 
 lint: ## golangci-lint
-	go tool golangci-lint run --out-format tab --sort-results --fix
+	go tool golangci-lint run --fix
