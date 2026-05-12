@@ -6,17 +6,14 @@ help: ## Show this help
 	@printf "\033[33m%s:\033[0m\n" 'Available commands'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[32m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install-gofumpt: ## Install gofumpt
-	@go install mvdan.cc/gofumpt@latest
-
-fmt: ## Format code
-	@gofumpt -l -w .
-
-build: ## Format code
+build: ## Build binary
 	go build -ldflags "-s -w"
 
 mod: ## go mod tidy
 	go mod tidy
 
+fmt: ## Format code
+	@go tool gofumpt -l -w .
+
 lint: ## golangci-lint
-	golangci-lint run --out-format tab --sort-results --fix
+	go tool golangci-lint run --out-format tab --sort-results --fix

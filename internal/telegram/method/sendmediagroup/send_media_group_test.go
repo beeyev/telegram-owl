@@ -22,7 +22,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 			options: sendmediagroup.Options{},
 			expectedErrors: []string{
 				"chat ID is required",
-				"at least one attachment required"},
+				"at least one attachment required",
+			},
 		},
 		{
 			name: "message is too long",
