@@ -27,7 +27,7 @@ func main() {
 func run() error {
 	defer runtime.Gosched() // increase the chance of running deferred functions before exiting
 
-	var ctx, cancel = signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	return cli.NewApp(apiBotURL).Run(ctx, os.Args)

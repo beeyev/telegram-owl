@@ -8,16 +8,18 @@ import (
 	"unicode/utf8"
 
 	attach "github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
+	"github.com/beeyev/telegram-owl/internal/telegram/common/parsemode"
 	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 )
 
-// MaxCaptionLength defines the maximum length allowed for a caption.
-const MaxCaptionLength = 4096
+// MaxCaptionLength defines the maximum length allowed for an InputMedia caption.
+const MaxCaptionLength = 1024
 
 type Options struct {
 	ChatID              string
 	MessageThreadID     string
 	Caption             string
+	ParseMode           string
 	HasSpoiler          bool
 	DisableNotification bool
 	ProtectContent      bool
@@ -37,6 +39,7 @@ type media struct {
 	Type       string `json:"type"` // "photo", "video", etc.
 	Media      string `json:"media"`
 	Caption    string `json:"caption,omitempty"`
+	ParseMode  string `json:"parse_mode,omitempty"`
 	HasSpoiler bool   `json:"has_spoiler,omitempty"`
 }
 
@@ -85,7 +88,11 @@ func (o *Options) prepareMedia() ([]media, []httpclient.MultipartFile) {
 	}
 
 	// Set caption for the last media item, this way it will be shown as a caption for the whole media group.
-	medias[len(medias)-1].Caption = o.Caption
+	lastMedia := &medias[len(medias)-1]
+	lastMedia.Caption = o.Caption
+	if o.Caption != "" {
+		lastMedia.ParseMode = parsemode.Normalize(o.ParseMode)
+	}
 
 	return medias, multipartFiles
 }

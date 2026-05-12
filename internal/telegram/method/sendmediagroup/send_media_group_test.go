@@ -4,14 +4,17 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmediagroup"
 	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSend_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		options        sendmediagroup.Options
@@ -22,7 +25,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 			options: sendmediagroup.Options{},
 			expectedErrors: []string{
 				"chat ID is required",
-				"at least one attachment required"},
+				"at least one attachment required",
+			},
 		},
 		{
 			name: "message is too long",
@@ -39,8 +43,10 @@ func TestSend_ValidationErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			sender := sendmediagroup.New(testutils.NewMockHTTPDoer())
-			err := sender.Send(&tt.options)
+			err := sender.Send(t.Context(), &tt.options)
 			require.Error(t, err)
 			for _, expectedError := range tt.expectedErrors {
 				assert.Containsf(t, err.Error(), expectedError, "expected error not found")
@@ -50,6 +56,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 }
 
 func TestSend_Success(t *testing.T) {
+	t.Parallel()
+
 	attachments := attachment.Attachments{
 		{
 			AType:     attachment.Photo,
@@ -73,7 +81,7 @@ func TestSend_Success(t *testing.T) {
 	mockHTTPClient := testutils.NewMockHTTPDoer()
 	sender := sendmediagroup.New(mockHTTPClient)
 
-	err := sender.Send(options)
+	err := sender.Send(t.Context(), options)
 	require.NoError(t, err)
 	require.Len(t, mockHTTPClient.SubmitMultipartResult, 1)
 
@@ -85,6 +93,8 @@ func TestSend_Success(t *testing.T) {
 }
 
 func TestSend_Success2(t *testing.T) {
+	t.Parallel()
+
 	dummyFile := &os.File{}
 
 	tests := []struct {
@@ -116,6 +126,7 @@ func TestSend_Success2(t *testing.T) {
 				ChatID:              "123",
 				MessageThreadID:     "456",
 				Caption:             "hello",
+				ParseMode:           "html",
 				HasSpoiler:          true,
 				DisableNotification: true,
 				ProtectContent:      true,
@@ -140,16 +151,38 @@ func TestSend_Success2(t *testing.T) {
 				"disable_notification": "1",
 				"protect_content":      "1",
 				//nolint:lll // Long line, but ok
-				"media": `[{"type":"document","media":"attach://file0","has_spoiler":true},{"type":"audio","media":"attach://file1","caption":"hello","has_spoiler":true}]`,
+				"media": `[{"type":"document","media":"attach://file0","has_spoiler":true},{"type":"audio","media":"attach://file1","caption":"hello","parse_mode":"html","has_spoiler":true}]`,
+			},
+		},
+		{
+			name: "markdown parse mode is normalized for captions",
+			options: &sendmediagroup.Options{
+				ChatID:    "123",
+				Caption:   "*hello*",
+				ParseMode: "markdown",
+				Attachments: attachment.Attachments{
+					{
+						AType:     attachment.Photo,
+						FileName:  "file1.jpg",
+						SizeBytes: 1024,
+						File:      dummyFile,
+					},
+				},
+			},
+			expected: map[string]string{
+				"chat_id": "123",
+				"media":   `[{"type":"photo","media":"attach://file0","caption":"*hello*","parse_mode":"MarkdownV2"}]`,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			mockHTTPClient := testutils.NewMockHTTPDoer()
 			sender := sendmediagroup.New(mockHTTPClient)
 
-			err := sender.Send(tt.options)
+			err := sender.Send(t.Context(), tt.options)
 			require.NoError(t, err)
 			require.Len(t, mockHTTPClient.SubmitMultipartResult, 1)
 

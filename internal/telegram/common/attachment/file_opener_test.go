@@ -5,15 +5,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 )
 
 func TestOSFileOpener_Open(t *testing.T) {
+	t.Parallel()
+
 	opener := attachment.OSFileOpener{}
 
 	t.Run("Valid File", func(t *testing.T) {
+		t.Parallel()
+
 		// Create a temporary file for testing
 		tempFile, err := os.CreateTemp(t.TempDir(), "testfile")
 		require.NoError(t, err)
@@ -41,6 +46,8 @@ func TestOSFileOpener_Open(t *testing.T) {
 	})
 
 	t.Run("Non-Existent File", func(t *testing.T) {
+		t.Parallel()
+
 		fileName := "non_existent_file.txt"
 		openedFile, err := opener.Open(fileName)
 		require.Error(t, err)
@@ -49,6 +56,8 @@ func TestOSFileOpener_Open(t *testing.T) {
 	})
 
 	t.Run("Empty File Path", func(t *testing.T) {
+		t.Parallel()
+
 		openedFile, err := opener.Open("")
 		require.Error(t, err)
 		assert.Nil(t, openedFile)

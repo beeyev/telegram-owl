@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/beeyev/telegram-owl/internal/telegram"
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
@@ -11,6 +13,7 @@ import (
 )
 
 type action struct {
+	ctx              context.Context
 	client           *telegram.Client
 	attachLoader     *attachment.Loader
 	chatID           string
@@ -35,7 +38,7 @@ func (a *action) execute() error {
 	}
 
 	// If message fits in media caption, send as single request
-	if len(a.message) <= sendmediagroup.MaxCaptionLength {
+	if utf8.RuneCountInString(a.message) <= sendmediagroup.MaxCaptionLength {
 		return a.sendMediaGroup(a.message)
 	}
 
@@ -51,7 +54,7 @@ func (a *action) sendMessage(message string) error {
 	if message == "" {
 		panic("message is required")
 	}
-	return a.client.SendMessage.Send(&sendmessage.Options{
+	return a.client.SendMessage.Send(a.ctx, &sendmessage.Options{
 		ChatID:              a.chatID,
 		Text:                message,
 		ParseMode:           a.MessageFormat,
@@ -71,11 +74,13 @@ func (a *action) sendMediaGroup(message string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load attachments: %w", err)
 	}
+	defer attachments.Close()
 
-	return a.client.SendMediaGroup.Send(&sendmediagroup.Options{
+	return a.client.SendMediaGroup.Send(a.ctx, &sendmediagroup.Options{
 		ChatID:              a.chatID,
 		MessageThreadID:     a.threadID,
 		Caption:             message,
+		ParseMode:           a.MessageFormat,
 		HasSpoiler:          a.spoiler,
 		DisableNotification: a.silent,
 		ProtectContent:      a.protect,

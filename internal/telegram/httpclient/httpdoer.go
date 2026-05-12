@@ -1,6 +1,9 @@
 package httpclient
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 type MultipartFile struct {
 	FieldName  string
@@ -10,6 +13,6 @@ type MultipartFile struct {
 
 // HTTPDoer is an interface to abstract away the underlying HTTP client logic.
 type HTTPDoer interface {
-	SubmitMultipart(method, endpoint string, fields map[string]string, files []MultipartFile) error
-	SubmitJSON(method, endpoint string, body any) error
+	SubmitMultipart(ctx context.Context, method, endpoint string, fields map[string]string, files []MultipartFile) error
+	SubmitJSON(ctx context.Context, method, endpoint string, body any) error
 }

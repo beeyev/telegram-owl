@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/parsemode"
 )
 
 // MaxTextLength defines the maximum length allowed for a text message.
@@ -44,13 +46,9 @@ func (o *Options) preparePayload() (*payload, error) {
 		ChatID:              o.ChatID,
 		MessageThreadID:     o.MessageThreadID,
 		Text:                o.Text,
-		ParseMode:           o.ParseMode,
+		ParseMode:           parsemode.Normalize(o.ParseMode),
 		DisableNotification: o.DisableNotification,
 		ProtectContent:      o.ProtectContent,
-	}
-
-	if o.ParseMode == "markdown" {
-		payload.ParseMode = "MarkdownV2"
 	}
 
 	if o.DisableLinkPreview {

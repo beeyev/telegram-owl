@@ -3,11 +3,14 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/urfave/cli/v3"
 
 	"github.com/beeyev/telegram-owl/internal/telegram"
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/version"
-	"github.com/urfave/cli/v3"
 )
 
 const author = "Alexander Tebiev - https://github.com/beeyev"
@@ -112,6 +115,12 @@ func flags() []cli.Flag {
 			OnlyOnce:    true,
 			HideDefault: true,
 		},
+		&cli.BoolFlag{
+			Name:        "verbose",
+			Usage:       "Print success messages.",
+			OnlyOnce:    true,
+			HideDefault: true,
+		},
 	}
 }
 
@@ -154,6 +163,7 @@ func NewApp(apiBotURL string) *cli.Command {
 			}
 
 			a := &action{
+				ctx:              ctx,
 				client:           telegramClient,
 				attachLoader:     attachLoader,
 				chatID:           cmd.String("chat"),
@@ -167,13 +177,51 @@ func NewApp(apiBotURL string) *cli.Command {
 				threadID:         cmd.String("thread"),
 			}
 
+			verbose := cmd.Bool("verbose")
+			startedAt := time.Now()
+			if verbose {
+				_, _ = fmt.Fprintln(cmd.Writer, verboseSendSummary(cmd, a))
+			}
+
 			if err = a.execute(); err != nil {
 				return fmt.Errorf("failed to send message to chat ID %s: %w", a.chatID, err)
 			}
 
-			_, _ = fmt.Fprintln(cmd.Writer, "Message sent successfully. Chat ID:", a.chatID)
+			if verbose {
+				_, _ = fmt.Fprintf(
+					cmd.Writer,
+					"Message sent successfully. Chat ID: %s. Duration: %s\n",
+					a.chatID,
+					time.Since(startedAt).Round(time.Millisecond),
+				)
+			}
 
 			return nil
 		},
 	}
+}
+
+func verboseSendSummary(cmd *cli.Command, a *action) string {
+	hasMessage := "no"
+	if a.message != "" {
+		hasMessage = "yes"
+	}
+
+	parts := []string{
+		fmt.Sprintf("chat=%s", a.chatID),
+		fmt.Sprintf("message=%s", hasMessage),
+		fmt.Sprintf("attachments=%d", len(a.attachmentsPaths)),
+	}
+
+	if a.threadID != "" {
+		parts = append(parts, fmt.Sprintf("thread=%s", a.threadID))
+	}
+	if a.MessageFormat != "" {
+		parts = append(parts, fmt.Sprintf("format=%s", a.MessageFormat))
+	}
+	if cmd.String("proxy") != "" {
+		parts = append(parts, "proxy=yes")
+	}
+
+	return "Sending Telegram message: " + strings.Join(parts, ", ")
 }

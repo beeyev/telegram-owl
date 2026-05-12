@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
-	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
+	"github.com/beeyev/telegram-owl/internal/telegram/testutils"
 )
 
 func TestSend_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		options        sendmessage.Options
@@ -36,8 +39,10 @@ func TestSend_ValidationErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			sender := sendmessage.New(testutils.NewMockHTTPDoer())
-			err := sender.Send(&tt.options)
+			err := sender.Send(t.Context(), &tt.options)
 			require.Error(t, err)
 			for _, expectedError := range tt.expectedErrors {
 				assert.Containsf(t, err.Error(), expectedError, "expected error not found")
@@ -47,6 +52,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 }
 
 func TestSend_Success(t *testing.T) {
+	t.Parallel()
+
 	mockHTTPClient := testutils.NewMockHTTPDoer()
 	sender := sendmessage.New(mockHTTPClient)
 
@@ -55,7 +62,7 @@ func TestSend_Success(t *testing.T) {
 		Text:   "Hello, world!",
 	}
 
-	err := sender.Send(options)
+	err := sender.Send(t.Context(), options)
 	require.NoError(t, err)
 
 	require.Len(t, mockHTTPClient.SubmitJSONResult, 1)

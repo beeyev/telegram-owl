@@ -1,8 +1,12 @@
 package testutils
 
-import "github.com/beeyev/telegram-owl/internal/telegram/httpclient"
+import (
+	"context"
 
-// MockHTTPDoer.
+	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
+)
+
+// MockHTTPDoer records HTTP requests made by tests.
 type MockHTTPDoer struct {
 	SubmitMultipartResult []submitMultipartPayload
 	SubmitJSONResult      []submitJSONPayload
@@ -21,7 +25,12 @@ type submitJSONPayload struct {
 	Body     any
 }
 
+func NewMockHTTPDoer() *MockHTTPDoer {
+	return &MockHTTPDoer{}
+}
+
 func (c *MockHTTPDoer) SubmitMultipart(
+	_ context.Context,
 	method,
 	endpoint string,
 	fields map[string]string,
@@ -37,7 +46,7 @@ func (c *MockHTTPDoer) SubmitMultipart(
 	return nil
 }
 
-func (c *MockHTTPDoer) SubmitJSON(method, endpoint string, body any) error {
+func (c *MockHTTPDoer) SubmitJSON(_ context.Context, method, endpoint string, body any) error {
 	c.SubmitJSONResult = append(c.SubmitJSONResult, submitJSONPayload{
 		Method:   method,
 		Endpoint: endpoint,
@@ -45,8 +54,4 @@ func (c *MockHTTPDoer) SubmitJSON(method, endpoint string, body any) error {
 	})
 
 	return nil
-}
-
-func NewMockHTTPDoer() *MockHTTPDoer {
-	return &MockHTTPDoer{}
 }

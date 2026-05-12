@@ -1,37 +1,49 @@
 package httpclient_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should return error if baseURL is empty", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("", "token", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "apiBotURL value is not provided")
 	})
 
 	t.Run("should return error if token is empty", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "token value is not provided")
 	})
 
 	t.Run("should return httpClient if baseURL and token are provided", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "token", "")
 		assert.NotNil(t, client)
 		assert.NoError(t, err)
 	})
 
 	t.Run("should return error if proxy is invalid", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "token", "://bad_proxy")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "invalid proxy URL: parse \"://bad_proxy\": missing protocol scheme")
@@ -46,6 +58,8 @@ type capturedJSONRequest struct {
 }
 
 func TestSubmitJSON_Success(t *testing.T) {
+	t.Parallel()
+
 	captured := capturedJSONRequest{}
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +82,7 @@ func TestSubmitJSON_Success(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "method-a", map[string]string{
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "method-a", map[string]string{
 		"foo": "bar",
 	})
 	require.NoError(t, err, "SubmitJSON should succeed when the server returns ok=true")
@@ -80,6 +94,8 @@ func TestSubmitJSON_Success(t *testing.T) {
 }
 
 func TestSubmitMultipart_Success(t *testing.T) {
+	t.Parallel()
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse multipart form
 		err := r.ParseMultipartForm(1 << 20) // 1MB
@@ -119,11 +135,19 @@ func TestSubmitMultipart_Success(t *testing.T) {
 	}
 	fields := map[string]string{"foo": "bar"}
 
-	err = client.SubmitMultipart(http.MethodPost, "method-b", fields, []httpclient.MultipartFile{multipartFile})
+	err = client.SubmitMultipart(
+		t.Context(),
+		http.MethodPost,
+		"method-b",
+		fields,
+		[]httpclient.MultipartFile{multipartFile},
+	)
 	require.NoError(t, err)
 }
 
 func TestErrorHandling_NetworkTransportError(t *testing.T) {
+	t.Parallel()
+
 	// If the server closes immediately or is unreachable, resty will return a transport error.
 	// We'll just close the server before calling.
 	mockServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
@@ -133,12 +157,14 @@ func TestErrorHandling_NetworkTransportError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "method-a", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "method-a", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "transport error:")
 }
 
 func TestErrorHandling_APIError(t *testing.T) {
+	t.Parallel()
+
 	// This mock server returns an HTTP error code with a Telegram-style error response
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -151,7 +177,7 @@ func TestErrorHandling_APIError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "/method-a", map[string]string{
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "/method-a", map[string]string{
 		"foo": "bar",
 	})
 	require.Error(t, err)
@@ -161,6 +187,8 @@ func TestErrorHandling_APIError(t *testing.T) {
 }
 
 func TestErrorHandling_EmptyResponse(t *testing.T) {
+	t.Parallel()
+
 	// If the server returns an error status but no 'description', we parse the raw body
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
@@ -171,12 +199,14 @@ func TestErrorHandling_EmptyResponse(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodPost, "/test-json", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "/test-json", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected error (status=403): <empty response body>")
 }
 
 func TestExecuteRequest_UnexpectedError(t *testing.T) {
+	t.Parallel()
+
 	responseBody := "some weird error"
 	// If the server returns an error status but no 'description', we parse the raw body
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -190,7 +220,29 @@ func TestExecuteRequest_UnexpectedError(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	err = client.SubmitJSON(http.MethodGet, "/test-json", nil)
+	err = client.SubmitJSON(t.Context(), http.MethodGet, "/test-json", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected error (status=403): some weird error")
+}
+
+func TestSubmitJSON_ContextCanceled(t *testing.T) {
+	t.Parallel()
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	}))
+	defer mockServer.Close()
+
+	client, err := httpclient.New(mockServer.URL, "to:ken", "")
+	require.NotNil(t, client)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err = client.SubmitJSON(ctx, http.MethodPost, "/test-json", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "context canceled")
 }

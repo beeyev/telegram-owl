@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/cli"
 )
 
 func getTestArgs(args []string) []string {
@@ -26,6 +27,8 @@ func setupMockServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server, 
 }
 
 func TestNoFlags(t *testing.T) {
+	t.Parallel()
+
 	outputBuf := new(bytes.Buffer)
 	ctx := t.Context()
 
@@ -38,7 +41,7 @@ func TestNoFlags(t *testing.T) {
 	assert.Contains(t, outputBuf.String(), "GLOBAL OPTIONS")
 }
 
-func TestSendMessage_FromStdin(t *testing.T) {
+func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassigns process-global os.Stdin.
 	var capturedBody string
 
 	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +60,11 @@ func TestSendMessage_FromStdin(t *testing.T) {
 	r, w, _ := os.Pipe()
 	_, _ = w.WriteString("hello from stdin\n")
 	_ = w.Close()
+	originalStdin := os.Stdin
+	t.Cleanup(func() {
+		//nolint:reassign // Restore process-global stdin after this test.
+		os.Stdin = originalStdin
+	})
 	//nolint:reassign // "reassigning variable Stdin in other package os"
 	os.Stdin = r
 
@@ -67,10 +75,12 @@ func TestSendMessage_FromStdin(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.JSONEq(t, `{"chat_id":"75757","text":"hello from stdin"}`, capturedBody)
-	assert.Equal(t, "Message sent successfully. Chat ID: 75757", strings.TrimSpace(outputBuf.String()))
+	assert.Empty(t, outputBuf.String())
 }
 
 func TestSendMessage_Success(t *testing.T) {
+	t.Parallel()
+
 	type capturedJSONRequest struct {
 		body        string
 		urlPath     string
@@ -82,6 +92,7 @@ func TestSendMessage_Success(t *testing.T) {
 		name                string
 		args                []string
 		expectedJSONPayload string
+		expectedOutput      string
 	}{
 		{
 			name:                "Minimal required flags",
@@ -97,6 +108,19 @@ func TestSendMessage_Success(t *testing.T) {
 			name:                "format flag with html",
 			args:                []string{"--token=123:abc", "--chat=75757", "--message=Hello", "--format=html"},
 			expectedJSONPayload: `{"chat_id":"75757","text":"Hello","parse_mode":"html"}`,
+		},
+		{
+			name: "verbose success output",
+			args: []string{
+				"--token=123:abc",
+				"--chat=75757",
+				"--message=Hello",
+				"--format=html",
+				"--thread=1234",
+				"--verbose=true",
+			},
+			expectedJSONPayload: `{"chat_id":"75757","message_thread_id":"1234","text":"Hello","parse_mode":"html"}`,
+			expectedOutput:      "Sending Telegram message: chat=75757, message=yes, attachments=0, thread=1234, format=html\nMessage sent successfully. Chat ID: 75757. Duration: ",
 		},
 		{
 			name: "All flags",
@@ -116,6 +140,8 @@ func TestSendMessage_Success(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			captured := capturedJSONRequest{}
 
 			mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -145,16 +171,23 @@ func TestSendMessage_Success(t *testing.T) {
 			assert.Exactly(t, `/bot123:abc/sendMessage`, captured.urlPath)
 			assert.Exactly(t, http.MethodPost, captured.method)
 			assert.Exactly(t, "application/json", captured.contentType)
-			assert.Equal(t, "Message sent successfully. Chat ID: 75757", strings.TrimSpace(outputBuf.String()))
+			if tt.expectedOutput == "" {
+				assert.Empty(t, outputBuf.String())
+			} else {
+				assert.Contains(t, outputBuf.String(), tt.expectedOutput)
+			}
 		})
 	}
 }
 
 func TestSendMediaGroup_Success(t *testing.T) {
+	t.Parallel()
+
 	type capturedMultipartRequest struct {
 		urlPath     string
 		method      string
 		contentType string
+		media       string
 	}
 
 	captured := capturedMultipartRequest{}
@@ -163,6 +196,11 @@ func TestSendMediaGroup_Success(t *testing.T) {
 		captured.urlPath = r.URL.Path
 		captured.method = r.Method
 		captured.contentType = r.Header.Get("Content-Type")
+		if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		captured.media = r.FormValue("media")
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -180,7 +218,8 @@ func TestSendMediaGroup_Success(t *testing.T) {
 		"--token=123:abc",
 		"--chat=75757",
 		"--attach=" + photoFile1.Name(),
-		"--message=Hello",
+		"--message=*Hello*",
+		"--format=markdown",
 		"--as-document=true",
 		"--silent=true",
 		"--spoiler=true",
@@ -195,10 +234,82 @@ func TestSendMediaGroup_Success(t *testing.T) {
 	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, captured.urlPath)
 	assert.Exactly(t, http.MethodPost, captured.method)
 	assert.Contains(t, captured.contentType, "multipart/form-data")
-	assert.Equal(t, "Message sent successfully. Chat ID: 75757", strings.TrimSpace(outputBuf.String()))
+	expectedMedia := `[{
+		"type":"document",
+		"media":"attach://file0",
+		"caption":"*Hello*",
+		"parse_mode":"MarkdownV2",
+		"has_spoiler":true
+	}]`
+	assert.JSONEq(t, expectedMedia, captured.media)
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendMediaGroup_LongMessageSendsTextSeparately(t *testing.T) {
+	t.Parallel()
+
+	type capturedRequest struct {
+		urlPath string
+		body    string
+		media   string
+	}
+
+	var captured []capturedRequest
+
+	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		req := capturedRequest{urlPath: r.URL.Path}
+		if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+			if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			req.media = r.FormValue("media")
+		} else {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if !assert.NoError(t, err) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			req.body = strings.TrimSpace(string(bodyBytes))
+		}
+		captured = append(captured, req)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	})
+
+	app := cli.NewApp(mockServer.URL)
+	app.Writer = outputBuf
+
+	photoFile1, err := os.CreateTemp(t.TempDir(), "photo1.jpg")
+	require.NoError(t, err)
+	defer photoFile1.Close()
+
+	message := strings.Repeat("a", 1025)
+	args := getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + photoFile1.Name(),
+		"--message=" + message,
+		"--format=html",
+		"--as-document=true",
+	})
+
+	err = app.Run(t.Context(), args)
+	require.NoError(t, err)
+
+	require.Len(t, captured, 2)
+	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, captured[0].urlPath)
+	assert.JSONEq(t, `[{"type":"document","media":"attach://file0"}]`, captured[0].media)
+	assert.Exactly(t, `/bot123:abc/sendMessage`, captured[1].urlPath)
+	assert.JSONEq(t, `{"chat_id":"75757","text":"`+message+`","parse_mode":"html"}`, captured[1].body)
+	assert.Empty(t, outputBuf.String())
 }
 
 func Test_ErrorResponse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		args []string
@@ -232,6 +343,8 @@ func Test_ErrorResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			outputBuf := new(bytes.Buffer)
 
 			app := cli.NewApp("dummy")

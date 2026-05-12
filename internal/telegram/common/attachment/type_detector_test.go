@@ -3,11 +3,14 @@ package attachment_test
 import (
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 )
 
 func TestDetectType(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		fileName string
@@ -51,6 +54,8 @@ func TestDetectType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := attachment.DetectType(tt.fileName)
 			assert.Equal(t, tt.want, got, "DetectType(%q) should return %v", tt.fileName, tt.want)
 		})

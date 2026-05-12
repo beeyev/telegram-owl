@@ -3,12 +3,15 @@ package attachment_test
 import (
 	"testing"
 
-	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 )
 
 func TestLoadMultipleAttachments_EmptyFiles(t *testing.T) {
+	t.Parallel()
+
 	loader := &attachment.Loader{}
 	_, err := loader.LoadMultipleAttachments(nil)
 	require.Error(t, err)
@@ -16,6 +19,8 @@ func TestLoadMultipleAttachments_EmptyFiles(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_ExceedsMaxCount(t *testing.T) {
+	t.Parallel()
+
 	loader := &attachment.Loader{
 		MaxTotalAttachments: 2,
 	}
@@ -26,6 +31,8 @@ func TestLoadMultipleAttachments_ExceedsMaxCount(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_ExceedsMaxSize(t *testing.T) {
+	t.Parallel()
+
 	file1 := "abc1/file1.jpg"
 	file2 := "abc2/file2.jpg"
 	filePaths := []string{file1, file2}
@@ -55,6 +62,8 @@ func TestLoadMultipleAttachments_ExceedsMaxSize(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_AttachmentExceedsMaxAllowedSize(t *testing.T) {
+	t.Parallel()
+
 	file1 := "abc1/file1.jpg"
 	file2 := "abc2/file2.jpg"
 	filePaths := []string{file1, file2}
@@ -83,6 +92,8 @@ func TestLoadMultipleAttachments_AttachmentExceedsMaxAllowedSize(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_Success(t *testing.T) {
+	t.Parallel()
+
 	filePath1 := "abc1/file1.jpg"
 	filePath2 := "abc2/file2.jpg"
 	filePaths := []string{filePath1, filePath2}
@@ -131,6 +142,8 @@ func TestLoadMultipleAttachments_Success(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_PhotoSwitchedToDocument(t *testing.T) {
+	t.Parallel()
+
 	filePath1 := "abc1/file1.jpg"
 	filePaths := []string{filePath1}
 
@@ -163,6 +176,8 @@ func TestLoadMultipleAttachments_PhotoSwitchedToDocument(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_MixedAttachmentTypes(t *testing.T) {
+	t.Parallel()
+
 	filePath1 := "abc1/file1.jpg"
 	filePath2 := "abc1/file2.mp3"
 	filePaths := []string{filePath1, filePath2}
@@ -190,6 +205,8 @@ func TestLoadMultipleAttachments_MixedAttachmentTypes(t *testing.T) {
 }
 
 func TestLoadMultipleAttachments_AllAttachmentsAsDocuments(t *testing.T) {
+	t.Parallel()
+
 	filePath1 := "abc1/file1.jpg"
 	filePath2 := "abc1/file2.jpg"
 	filePaths := []string{filePath1, filePath2}
