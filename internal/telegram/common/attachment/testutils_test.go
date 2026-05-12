@@ -38,7 +38,7 @@ func newMockReadCloser(content string) *mockReadCloser {
 	return &mockReadCloser{data: bytes.NewReader([]byte(content))}
 }
 
-// Read implements io.Reader.
+// Read implements [io.Reader]
 func (m *mockReadCloser) Read(p []byte) (int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

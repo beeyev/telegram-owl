@@ -25,6 +25,10 @@ type submitJSONPayload struct {
 	Body     any
 }
 
+func NewMockHTTPDoer() *MockHTTPDoer {
+	return &MockHTTPDoer{}
+}
+
 func (c *MockHTTPDoer) SubmitMultipart(
 	_ context.Context,
 	method,
@@ -50,8 +54,4 @@ func (c *MockHTTPDoer) SubmitJSON(_ context.Context, method, endpoint string, bo
 	})
 
 	return nil
-}
-
-func NewMockHTTPDoer() *MockHTTPDoer {
-	return &MockHTTPDoer{}
 }
