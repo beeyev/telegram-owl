@@ -15,5 +15,8 @@ mod: ## go mod tidy
 fmt: ## Format code
 	@go tool gofumpt -l -w .
 
+test: ## Run tests
+	go test ./...
+
 lint: ## golangci-lint
 	go tool golangci-lint run --out-format tab --sort-results --fix

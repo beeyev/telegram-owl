@@ -12,6 +12,8 @@ import (
 )
 
 func TestSend_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		options        sendmediagroup.Options
@@ -40,6 +42,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			sender := sendmediagroup.New(testutils.NewMockHTTPDoer())
 			err := sender.Send(t.Context(), &tt.options)
 			require.Error(t, err)
@@ -51,6 +55,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 }
 
 func TestSend_Success(t *testing.T) {
+	t.Parallel()
+
 	attachments := attachment.Attachments{
 		{
 			AType:     attachment.Photo,
@@ -86,6 +92,8 @@ func TestSend_Success(t *testing.T) {
 }
 
 func TestSend_Success2(t *testing.T) {
+	t.Parallel()
+
 	dummyFile := &os.File{}
 
 	tests := []struct {
@@ -147,6 +155,8 @@ func TestSend_Success2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			mockHTTPClient := testutils.NewMockHTTPDoer()
 			sender := sendmediagroup.New(mockHTTPClient)
 

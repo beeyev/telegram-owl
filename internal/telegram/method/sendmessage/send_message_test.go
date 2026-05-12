@@ -11,6 +11,8 @@ import (
 )
 
 func TestSend_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		options        sendmessage.Options
@@ -36,6 +38,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			sender := sendmessage.New(testutils.NewMockHTTPDoer())
 			err := sender.Send(t.Context(), &tt.options)
 			require.Error(t, err)
@@ -47,6 +51,8 @@ func TestSend_ValidationErrors(t *testing.T) {
 }
 
 func TestSend_Success(t *testing.T) {
+	t.Parallel()
+
 	mockHTTPClient := testutils.NewMockHTTPDoer()
 	sender := sendmessage.New(mockHTTPClient)
 

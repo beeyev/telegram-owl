@@ -14,25 +14,35 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should return error if baseURL is empty", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("", "token", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "apiBotURL value is not provided")
 	})
 
 	t.Run("should return error if token is empty", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "", "")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "token value is not provided")
 	})
 
 	t.Run("should return httpClient if baseURL and token are provided", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "token", "")
 		assert.NotNil(t, client)
 		assert.NoError(t, err)
 	})
 
 	t.Run("should return error if proxy is invalid", func(t *testing.T) {
+		t.Parallel()
+
 		client, err := httpclient.New("http://example.com", "token", "://bad_proxy")
 		assert.Nil(t, client)
 		assert.EqualError(t, err, "invalid proxy URL: parse \"://bad_proxy\": missing protocol scheme")
@@ -47,6 +57,8 @@ type capturedJSONRequest struct {
 }
 
 func TestSubmitJSON_Success(t *testing.T) {
+	t.Parallel()
+
 	captured := capturedJSONRequest{}
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +93,8 @@ func TestSubmitJSON_Success(t *testing.T) {
 }
 
 func TestSubmitMultipart_Success(t *testing.T) {
+	t.Parallel()
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse multipart form
 		err := r.ParseMultipartForm(1 << 20) // 1MB
@@ -131,6 +145,8 @@ func TestSubmitMultipart_Success(t *testing.T) {
 }
 
 func TestErrorHandling_NetworkTransportError(t *testing.T) {
+	t.Parallel()
+
 	// If the server closes immediately or is unreachable, resty will return a transport error.
 	// We'll just close the server before calling.
 	mockServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
@@ -146,6 +162,8 @@ func TestErrorHandling_NetworkTransportError(t *testing.T) {
 }
 
 func TestErrorHandling_APIError(t *testing.T) {
+	t.Parallel()
+
 	// This mock server returns an HTTP error code with a Telegram-style error response
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -168,6 +186,8 @@ func TestErrorHandling_APIError(t *testing.T) {
 }
 
 func TestErrorHandling_EmptyResponse(t *testing.T) {
+	t.Parallel()
+
 	// If the server returns an error status but no 'description', we parse the raw body
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
@@ -184,6 +204,8 @@ func TestErrorHandling_EmptyResponse(t *testing.T) {
 }
 
 func TestExecuteRequest_UnexpectedError(t *testing.T) {
+	t.Parallel()
+
 	responseBody := "some weird error"
 	// If the server returns an error status but no 'description', we parse the raw body
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -203,6 +225,8 @@ func TestExecuteRequest_UnexpectedError(t *testing.T) {
 }
 
 func TestSubmitJSON_ContextCanceled(t *testing.T) {
+	t.Parallel()
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

@@ -9,6 +9,8 @@ import (
 )
 
 func TestStructToFormPayload_Positive(t *testing.T) {
+	t.Parallel()
+
 	type TestStruct struct {
 		Name     string
 		Age      int
@@ -40,12 +42,16 @@ func TestStructToFormPayload_Positive(t *testing.T) {
 }
 
 func TestStructToFormPayload_NilInput(t *testing.T) {
+	t.Parallel()
+
 	result, err := util.StructToFormPayload(nil)
 	assert.Nil(t, result)
 	assert.EqualError(t, err, "input struct is nil")
 }
 
 func TestStructToFormPayload_MarshalError(t *testing.T) {
+	t.Parallel()
+
 	type Unmarshallable struct {
 		Ch chan int // JSON can't marshal channels
 	}

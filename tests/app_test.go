@@ -26,6 +26,8 @@ func setupMockServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server, 
 }
 
 func TestNoFlags(t *testing.T) {
+	t.Parallel()
+
 	outputBuf := new(bytes.Buffer)
 	ctx := t.Context()
 
@@ -38,7 +40,7 @@ func TestNoFlags(t *testing.T) {
 	assert.Contains(t, outputBuf.String(), "GLOBAL OPTIONS")
 }
 
-func TestSendMessage_FromStdin(t *testing.T) {
+func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassigns process-global os.Stdin.
 	var capturedBody string
 
 	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +59,11 @@ func TestSendMessage_FromStdin(t *testing.T) {
 	r, w, _ := os.Pipe()
 	_, _ = w.WriteString("hello from stdin\n")
 	_ = w.Close()
+	originalStdin := os.Stdin
+	t.Cleanup(func() {
+		//nolint:reassign // Restore process-global stdin after this test.
+		os.Stdin = originalStdin
+	})
 	//nolint:reassign // "reassigning variable Stdin in other package os"
 	os.Stdin = r
 
@@ -71,6 +78,8 @@ func TestSendMessage_FromStdin(t *testing.T) {
 }
 
 func TestSendMessage_Success(t *testing.T) {
+	t.Parallel()
+
 	type capturedJSONRequest struct {
 		body        string
 		urlPath     string
@@ -130,6 +139,8 @@ func TestSendMessage_Success(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			captured := capturedJSONRequest{}
 
 			mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -169,6 +180,8 @@ func TestSendMessage_Success(t *testing.T) {
 }
 
 func TestSendMediaGroup_Success(t *testing.T) {
+	t.Parallel()
+
 	type capturedMultipartRequest struct {
 		urlPath     string
 		method      string
@@ -217,6 +230,8 @@ func TestSendMediaGroup_Success(t *testing.T) {
 }
 
 func Test_ErrorResponse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		args []string
@@ -250,6 +265,8 @@ func Test_ErrorResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			outputBuf := new(bytes.Buffer)
 
 			app := cli.NewApp("dummy")
