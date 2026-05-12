@@ -13,8 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-env:
-  GOLANGCILINT_VERSION: "1.64.8"
+permissions:
+  contents: read
 
 jobs:
   unit-tests:
@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: 📦 Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🧰 Setup Go
         uses: actions/setup-go@v6
@@ -48,28 +48,40 @@ jobs:
     name: ✨ Lint with golangci-lint + reviewdog
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - name: 📦 Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+
+      - name: 🧰 Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 🐶 Setup reviewdog
+        uses: reviewdog/action-setup@v1
 
       - name: 🧪 Run golangci-lint via reviewdog
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          golangci_lint_version: v${{ env.GOLANGCILINT_VERSION }}
-          tool_name: "golangci-lint"
-          go_version_file: "go.mod"
-          filter_mode: "nofilter" # check the whole repo, not just lines added or changed
-          reporter: "github-pr-check"
+        run: |
+          set -o pipefail
 
-#      - name: Setup Go environment
-#        uses: actions/setup-go@v5
-#        with:
-#          go-version-file: ./go.mod
-#          check-latest: true
-#          cache-dependency-path: ./go.sum
-
-#      # Update to v7 after switching to golangci v2.0
-#      - name: 🧹 Run golangci-lint
-#        uses: golangci/golangci-lint-action@v6
-#        with:
-#          version: v${{ env.GOLANGCILINT_VERSION }}
+          go tool golangci-lint run \
+            --output.text.path=stderr \
+            --output.checkstyle.path=stdout \
+            --issues-exit-code=0 \
+            ./... \
+            | reviewdog \
+              -f=checkstyle \
+              -name="golangci-lint" \
+              -filter-mode="nofilter" \
+              -reporter="${REVIEWDOG_REPORTER}" \
+              -fail-on-error
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEWDOG_REPORTER: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
