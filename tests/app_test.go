@@ -379,7 +379,6 @@ func TestSendMediaGroup_LongMessageSendsTextSeparately(t *testing.T) {
 		"--chat=75757",
 		"--attach=" + photoFile1.Name(),
 		"--message=" + message,
-		"--format=html",
 		"--as-document=true",
 	})
 
@@ -390,7 +389,53 @@ func TestSendMediaGroup_LongMessageSendsTextSeparately(t *testing.T) {
 	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, captured[0].urlPath)
 	assert.JSONEq(t, `[{"type":"document","media":"attach://file0"}]`, captured[0].media)
 	assert.Exactly(t, `/bot123:abc/sendMessage`, captured[1].urlPath)
-	assert.JSONEq(t, `{"chat_id":"75757","text":"`+message+`","parse_mode":"html"}`, captured[1].body)
+	assert.JSONEq(t, `{"chat_id":"75757","text":"`+message+`"}`, captured[1].body)
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendMediaGroup_FormattedCaptionDelegatesLengthValidation(t *testing.T) {
+	t.Parallel()
+
+	var capturedPath string
+	var capturedMedia string
+
+	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		capturedMedia = r.FormValue("media")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	})
+
+	app := cli.NewApp(mockServer.URL)
+	app.Writer = outputBuf
+
+	photoFile, err := os.CreateTemp(t.TempDir(), "photo.jpg")
+	require.NoError(t, err)
+	defer photoFile.Close()
+
+	message := "<b>" + strings.Repeat("a", 1018) + "</b>"
+	require.Len(t, []rune(message), 1025)
+
+	err = app.Run(t.Context(), getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + photoFile.Name(),
+		"--message=" + message,
+		"--format=html",
+		"--as-document=true",
+	}))
+	require.NoError(t, err)
+
+	assert.Exactly(t, `/bot123:abc/sendMediaGroup`, capturedPath)
+	expectedMedia := `[{"type":"document","media":"attach://file0","caption":"` +
+		message + `","parse_mode":"html"}]`
+	assert.JSONEq(t, expectedMedia, capturedMedia)
 	assert.Empty(t, outputBuf.String())
 }
 

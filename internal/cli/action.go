@@ -40,9 +40,10 @@ func (a *action) execute() error {
 		return a.sendMessage(a.message)
 	}
 
-	// Telegram limits a media-group caption to 1,024 Unicode code points. Keep
-	// short text attached to the media so the operation remains one request.
-	if utf8.RuneCountInString(a.message) <= sendmediagroup.MaxCaptionLength {
+	// Telegram applies the caption limit after parsing entities. Raw length can
+	// determine routing only for plain text; formatted captions must be submitted
+	// so Telegram can validate their parsed length.
+	if a.MessageFormat != "" || utf8.RuneCountInString(a.message) <= sendmediagroup.MaxCaptionLength {
 		return a.sendMediaGroup(a.message)
 	}
 
