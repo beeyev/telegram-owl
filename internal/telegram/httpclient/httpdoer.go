@@ -8,7 +8,7 @@ import (
 type MultipartFile struct {
 	FieldName  string
 	FileName   string
-	FileReader io.ReadCloser
+	FileReader io.Reader
 }
 
 // HTTPDoer is an interface to abstract away the underlying HTTP client logic.

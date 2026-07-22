@@ -1,6 +1,8 @@
 package attachment
 
 import (
+	"errors"
+	"fmt"
 	"io"
 )
 
@@ -22,15 +24,17 @@ func (a *Attachment) Close() error {
 type Attachments []*Attachment
 
 func (a Attachments) Close() error {
-	if len(a) == 0 {
-		return nil
-	}
+	closeErrors := make([]error, 0, len(a))
 
 	for _, attach := range a {
 		if err := attach.Close(); err != nil {
-			return err
+			fileName := "<unknown>"
+			if attach != nil && attach.FileName != "" {
+				fileName = attach.FileName
+			}
+			closeErrors = append(closeErrors, fmt.Errorf("close %q: %w", fileName, err))
 		}
 	}
 
-	return nil
+	return errors.Join(closeErrors...)
 }

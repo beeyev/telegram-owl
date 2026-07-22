@@ -2,6 +2,7 @@ package httpclient_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,14 @@ import (
 	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 )
 
+type failingJSONBody struct {
+	err error
+}
+
+func (b failingJSONBody) MarshalJSON() ([]byte, error) {
+	return nil, b.err
+}
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -22,7 +31,7 @@ func TestNew(t *testing.T) {
 
 		client, err := httpclient.New("", "token", "")
 		assert.Nil(t, client)
-		assert.EqualError(t, err, "apiBotURL value is not provided")
+		assert.EqualError(t, err, "api bot url value is not provided")
 	})
 
 	t.Run("should return error if token is empty", func(t *testing.T) {
@@ -46,7 +55,7 @@ func TestNew(t *testing.T) {
 
 		client, err := httpclient.New("http://example.com", "token", "://bad_proxy")
 		assert.Nil(t, client)
-		assert.EqualError(t, err, "invalid proxy URL: parse \"://bad_proxy\": missing protocol scheme")
+		assert.EqualError(t, err, "invalid proxy url: parse \"://bad_proxy\": missing protocol scheme")
 	})
 }
 
@@ -159,7 +168,8 @@ func TestErrorHandling_NetworkTransportError(t *testing.T) {
 
 	err = client.SubmitJSON(t.Context(), http.MethodPost, "method-a", nil)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "transport error:")
+	assert.Contains(t, err.Error(), "telegram api request failed:")
+	assert.NotContains(t, err.Error(), "to:ken")
 }
 
 func TestErrorHandling_APIError(t *testing.T) {
@@ -183,7 +193,11 @@ func TestErrorHandling_APIError(t *testing.T) {
 	require.Error(t, err)
 
 	// Verify the error message is what we expect
-	assert.Contains(t, err.Error(), "API error [/method-a] (HTTP 400): 400 - Bad Request: something went wrong")
+	assert.Contains(
+		t,
+		err.Error(),
+		"telegram api error [/method-a] (http 400): 400 - Bad Request: something went wrong",
+	)
 }
 
 func TestErrorHandling_EmptyResponse(t *testing.T) {
@@ -245,4 +259,34 @@ func TestSubmitJSON_ContextCanceled(t *testing.T) {
 	err = client.SubmitJSON(ctx, http.MethodPost, "/test-json", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "context canceled")
+}
+
+func TestSubmitJSON_NilContext(t *testing.T) {
+	t.Parallel()
+
+	client, err := httpclient.New("http://example.com", "token", "")
+	require.NoError(t, err)
+
+	var ctx context.Context
+	err = client.SubmitJSON(ctx, http.MethodPost, "/test-json", nil)
+	assert.EqualError(t, err, "context is nil")
+}
+
+func TestSubmitJSON_PreservesSerializationError(t *testing.T) {
+	t.Parallel()
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	}))
+	t.Cleanup(mockServer.Close)
+
+	client, err := httpclient.New(mockServer.URL, "token", "")
+	require.NoError(t, err)
+
+	cause := errors.New("serialize request body")
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "/test-json", failingJSONBody{err: cause})
+	require.Error(t, err)
+	require.ErrorIs(t, err, cause)
+	assert.ErrorContains(t, err, "telegram api request failed")
 }

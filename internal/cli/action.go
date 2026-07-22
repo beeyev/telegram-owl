@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"unicode/utf8"
 
 	"github.com/beeyev/telegram-owl/internal/telegram"
@@ -16,6 +17,7 @@ type action struct {
 	ctx              context.Context
 	client           *telegram.Client
 	attachLoader     *attachment.Loader
+	warningWriter    io.Writer
 	chatID           string
 	message          string
 	MessageFormat    string
@@ -52,8 +54,9 @@ func (a *action) execute() error {
 
 func (a *action) sendMessage(message string) error {
 	if message == "" {
-		panic("message is required")
+		return errors.New("message is required")
 	}
+
 	return a.client.SendMessage.Send(a.ctx, &sendmessage.Options{
 		ChatID:              a.chatID,
 		Text:                message,
@@ -67,16 +70,14 @@ func (a *action) sendMessage(message string) error {
 
 func (a *action) sendMediaGroup(message string) error {
 	if len(a.attachmentsPaths) == 0 {
-		panic("no attachments to send")
+		return errors.New("no attachments to send")
 	}
 
 	attachments, err := a.attachLoader.LoadMultipleAttachments(a.attachmentsPaths)
 	if err != nil {
 		return fmt.Errorf("failed to load attachments: %w", err)
 	}
-	defer attachments.Close()
-
-	return a.client.SendMediaGroup.Send(a.ctx, &sendmediagroup.Options{
+	sendErr := a.client.SendMediaGroup.Send(a.ctx, &sendmediagroup.Options{
 		ChatID:              a.chatID,
 		MessageThreadID:     a.threadID,
 		Caption:             message,
@@ -86,4 +87,27 @@ func (a *action) sendMediaGroup(message string) error {
 		ProtectContent:      a.protect,
 		Attachments:         attachments,
 	})
+	if sendErr != nil {
+		sendErr = fmt.Errorf("send attachments: %w", sendErr)
+	}
+
+	closeErr := attachments.Close()
+	if closeErr == nil {
+		return sendErr
+	}
+	closeErr = fmt.Errorf("close attachments: %w", closeErr)
+
+	if sendErr != nil {
+		return errors.Join(sendErr, closeErr)
+	}
+
+	if a.warningWriter != nil {
+		_, _ = fmt.Fprintf(
+			a.warningWriter,
+			"warning: attachments sent, but cleanup failed: %v\n",
+			closeErr,
+		)
+	}
+
+	return nil
 }

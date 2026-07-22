@@ -28,19 +28,16 @@ func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error
 	for _, path := range filePaths {
 		attachment, err := l.loadAttachment(path)
 		if err != nil {
-			attachments.Close() //nolint:gosec // Best-effort cleanup before returning the original error.
-			return nil, err
+			return nil, errors.Join(err, attachments.Close())
 		}
 
 		totalSizeBytes += attachment.SizeBytes
 		if totalSizeBytes > l.MaxTotalSizeBytes {
-			// TODO find better way to close attachments
-			attachment.Close()  //nolint:gosec // Best-effort cleanup before returning the size error.
-			attachments.Close() //nolint:gosec // Best-effort cleanup before returning the size error.
-			return nil, fmt.Errorf(
+			limitErr := fmt.Errorf(
 				"total attachments size exceeds the max allowed %d MB",
 				bytesToMegabytes(l.MaxTotalSizeBytes),
 			)
+			return nil, errors.Join(limitErr, attachment.Close(), attachments.Close())
 		}
 
 		attachments = append(attachments, attachment)
@@ -67,9 +64,13 @@ func (l *Loader) loadAttachment(filePath string) (*Attachment, error) {
 	attachmentType := l.determineAttachmentType(filePath, openedFile.SizeBytes)
 
 	if openedFile.SizeBytes > l.MaxAttachmentSizeBytes {
-		openedFile.File.Close() //nolint:gosec // Best-effort cleanup before returning the size error.
-		return nil, fmt.Errorf("attachment %q: size %d MB exceeds the max allowed of %d MB",
-			filePath, bytesToMegabytes(openedFile.SizeBytes), bytesToMegabytes(l.MaxAttachmentSizeBytes))
+		sizeErr := fmt.Errorf(
+			"attachment %q: size %d MB exceeds the max allowed of %d MB",
+			filePath,
+			bytesToMegabytes(openedFile.SizeBytes),
+			bytesToMegabytes(l.MaxAttachmentSizeBytes),
+		)
+		return nil, errors.Join(sizeErr, openedFile.File.Close())
 	}
 
 	return &Attachment{

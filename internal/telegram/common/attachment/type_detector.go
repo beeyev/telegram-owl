@@ -9,7 +9,7 @@ import (
 // Falls back to Document if unknown.
 func DetectType(fileName string) AType {
 	if fileName == "" {
-		panic("file name is empty")
+		return Document
 	}
 
 	ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(fileName)), ".")

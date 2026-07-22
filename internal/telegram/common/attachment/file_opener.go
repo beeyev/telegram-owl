@@ -35,8 +35,7 @@ func (o *OSFileOpener) Open(path string) (*OpenedFile, error) {
 	// Get file info
 	info, err := file.Stat()
 	if err != nil {
-		file.Close() //nolint:gosec // Best-effort close on the error path.
-		return nil, fmt.Errorf("stat %q: %w", path, err)
+		return nil, errors.Join(fmt.Errorf("stat %q: %w", path, err), file.Close())
 	}
 
 	return &OpenedFile{File: file, SizeBytes: info.Size()}, nil

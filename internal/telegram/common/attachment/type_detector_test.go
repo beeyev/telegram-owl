@@ -43,6 +43,7 @@ func TestDetectType(t *testing.T) {
 		{"mixed-case MoV", "clip.MoV", attachment.Video},
 
 		// No extension
+		{"empty name", "", attachment.Document},
 		{"no extension", "filename", attachment.Document},
 		{"dot but no extension", "filename.", attachment.Document},
 		{"hidden file in UNIX style", ".hiddenfile", attachment.Document},

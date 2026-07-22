@@ -176,7 +176,7 @@ export TELEGRAM_OWL_PROXY="http://proxy.example.com:8080"
 
 - HTTP(S) proxy:
 ```console
-telegram-owl --proxy http://proxy.local:3128 -t $BOT_TOKEN -c @channel -m "Hello via proxy"`
+telegram-owl --proxy http://proxy.local:3128 -t $BOT_TOKEN -c @channel -m "Hello via proxy"
 ```
 
 - SOCKS5 proxy:
