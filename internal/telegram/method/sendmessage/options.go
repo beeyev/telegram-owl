@@ -12,6 +12,8 @@ import (
 // MaxTextLength defines the maximum length allowed for a text message.
 const MaxTextLength = 4096
 
+// Options contains the user-visible sendMessage parameters supported by the
+// CLI. preparePayload translates these fields to Telegram's wire schema.
 type Options struct {
 	ChatID              string
 	MessageThreadID     string

@@ -26,6 +26,9 @@ const usageText = `Examples:
   echo "Hi there" | telegram-owl -t $TOKEN -c 123456789 --stdin
   telegram-owl -t $TOKEN -c @group --attach file.jpg --spoiler`
 
+// versionFlag keeps version rendering local to this command. Using urfave's
+// package-level VersionPrinter would mutate global state shared by every app in
+// the process, including tests.
 func versionFlag() *cli.BoolFlag {
 	return &cli.BoolFlag{
 		Name:        "version",
@@ -135,6 +138,9 @@ func flags() []cli.Flag {
 	}
 }
 
+// NewApp builds the command without running it. apiBotURL is injectable so the
+// same command can target Telegram in production and an HTTP test server in
+// integration tests.
 func NewApp(apiBotURL string) *cli.Command {
 	return &cli.Command{
 		Name:            "telegram-owl",
@@ -145,6 +151,8 @@ func NewApp(apiBotURL string) *cli.Command {
 		UsageText:       usageText,
 		Flags:           flags(),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
+			// This is an application-owned version flag, not urfave's global
+			// version handler. Handle it before validating Telegram inputs.
 			if cmd.Bool("version") {
 				return printVersion(cmd)
 			}
@@ -217,6 +225,8 @@ func NewApp(apiBotURL string) *cli.Command {
 	}
 }
 
+// printVersion preserves the release convention of a single leading "v" even
+// when the linker injects an already-prefixed version.
 func printVersion(cmd *cli.Command) error {
 	displayVersion := cmd.Version
 	if !strings.HasPrefix(displayVersion, "v") {
@@ -227,6 +237,8 @@ func printVersion(cmd *cli.Command) error {
 	return err
 }
 
+// verboseSendSummary reports routing metadata without including the message,
+// bot token, proxy credentials, or attachment paths.
 func verboseSendSummary(cmd *cli.Command, a *action) string {
 	hasMessage := "no"
 	if a.message != "" {

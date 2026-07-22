@@ -34,17 +34,20 @@ func (a *action) execute() error {
 		return errors.New("nothing to send: provide a --message or --attach flag")
 	}
 
-	// Send message without media
+	// Text-only sends use sendMessage because Telegram media groups require at
+	// least one attachment.
 	if len(a.attachmentsPaths) == 0 {
 		return a.sendMessage(a.message)
 	}
 
-	// If message fits in media caption, send as single request
+	// Telegram limits a media-group caption to 1,024 Unicode code points. Keep
+	// short text attached to the media so the operation remains one request.
 	if utf8.RuneCountInString(a.message) <= sendmediagroup.MaxCaptionLength {
 		return a.sendMediaGroup(a.message)
 	}
 
-	// Otherwise split into media group and separate message
+	// Longer text cannot be a caption. Send the attachments first, then the
+	// complete text as a separate message. Do not send the text if upload fails.
 	if err := a.sendMediaGroup(""); err != nil {
 		return err
 	}
@@ -77,6 +80,10 @@ func (a *action) sendMediaGroup(message string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load attachments: %w", err)
 	}
+
+	// The loader transfers ownership of open files to this action. Keep them
+	// open through the synchronous upload, then close each file exactly once.
+	// The HTTP adapter hides io.Closer from Resty so Resty cannot close them.
 	sendErr := a.client.SendMediaGroup.Send(a.ctx, &sendmediagroup.Options{
 		ChatID:              a.chatID,
 		MessageThreadID:     a.threadID,
@@ -98,9 +105,13 @@ func (a *action) sendMediaGroup(message string) error {
 	closeErr = fmt.Errorf("close attachments: %w", closeErr)
 
 	if sendErr != nil {
+		// Preserve both failures. The upload error explains the failed operation;
+		// the cleanup error identifies leaked or partially closed resources.
 		return errors.Join(sendErr, closeErr)
 	}
 
+	// The upload already succeeded. Report cleanup as a warning so a long
+	// message can still continue with its second, text-only request.
 	if a.warningWriter != nil {
 		_, _ = fmt.Fprintf(
 			a.warningWriter,

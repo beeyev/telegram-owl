@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 )
 
-// Loader validates and loads attachments according to configured limits.
+// Loader validates, classifies, and opens attachments according to configured
+// limits. The caller owns returned files only when loading succeeds.
 type Loader struct {
 	FileOpener                  FileOpener
 	IsEverythingDocument        bool
@@ -16,6 +17,9 @@ type Loader struct {
 	MaxTotalSizeBytes           int64
 }
 
+// LoadMultipleAttachments opens every path and returns a Telegram-compatible
+// group. On failure it closes the current file and everything opened earlier,
+// joining any cleanup failures with the primary error.
 func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error) {
 	if err := l.validateAttachments(filePaths); err != nil {
 		return nil, err
@@ -47,6 +51,9 @@ func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error
 	}
 
 	if !l.IsEverythingDocument && !isOnlyPhotoOrVideo(typesFound) {
+		// A photo/video album may mix those two types. If any document or audio
+		// is present, normalize the entire group to documents so Telegram accepts
+		// one compatible media class.
 		for _, attach := range attachments {
 			attach.AType = Document
 		}
@@ -88,13 +95,16 @@ func (l *Loader) determineAttachmentType(filePath string, sizeBytes int64) AType
 
 	attachmentType := DetectType(filePath)
 	if attachmentType == Photo && sizeBytes > l.MaxPhotoAttachmentSizeBytes {
+		// Telegram accepts a larger file as a document even when the extension
+		// would normally classify it as a photo.
 		return Document
 	}
 
 	return attachmentType
 }
 
-// validateAttachments checks limits before processing files.
+// validateAttachments rejects collection-level errors before any file is
+// opened, keeping these failure paths free of resource cleanup.
 func (l *Loader) validateAttachments(filePaths []string) error {
 	if len(filePaths) == 0 {
 		return errors.New("no attachments provided")

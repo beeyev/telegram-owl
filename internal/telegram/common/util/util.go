@@ -1,3 +1,4 @@
+// Package util contains payload conversion shared by Telegram method packages.
 package util
 
 import (
@@ -6,7 +7,9 @@ import (
 	"fmt"
 )
 
-// StructToFormPayload parses parameter struct to key value structure, v should be a pointer to struct.
+// StructToFormPayload converts a JSON-shaped value into Telegram multipart form
+// fields. JSON tags and omitempty rules define field names and presence; boolean
+// values use Telegram's conventional "1" and "0" representation.
 func StructToFormPayload(v any) (map[string]string, error) {
 	if v == nil {
 		return nil, errors.New("input struct is nil")
@@ -23,7 +26,6 @@ func StructToFormPayload(v any) (map[string]string, error) {
 		return nil, fmt.Errorf("failed to unmarshal struct: %w", err)
 	}
 
-	// Convert the map values to strings
 	result := make(map[string]string, len(intermediateMap))
 
 	for field, val := range intermediateMap {

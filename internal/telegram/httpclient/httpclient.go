@@ -27,6 +27,8 @@ type errorResponse struct {
 	Description string `json:"description,omitempty"`
 }
 
+// New creates a Telegram HTTP transport. apiBotURL should be the API root,
+// without the bot token path; tests may provide an httptest server URL.
 func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 	if apiBotURL == "" {
 		return nil, errors.New("api bot url value is not provided")
@@ -41,8 +43,9 @@ func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 		return nil, fmt.Errorf("invalid api url: %w", err)
 	}
 
+	// Keep Resty debug logging disabled. The base URL contains the bot token,
+	// which request diagnostics could expose.
 	restyClient := resty.New().
-		// SetDebug(true).
 		SetBaseURL(baseURLWithToken).
 		SetTimeout(defaultRequestTimeout)
 
@@ -76,7 +79,10 @@ func (c httpClient) SubmitMultipart(
 	return c.executeRequest(ctx, method, endpoint, request)
 }
 
-// hideCloser keeps reader ownership with the caller while preserving seek support.
+// hideCloser prevents Resty v3 from taking ownership of caller-managed files.
+// Resty closes multipart readers after Execute, so embedding only [io.Reader]
+// hides Close. Preserve [io.ReadSeeker] when available because Resty uses seeking
+// to inspect and retry multipart bodies.
 func hideCloser(reader io.Reader) io.Reader {
 	if readSeeker, ok := reader.(io.ReadSeeker); ok {
 		return struct{ io.ReadSeeker }{ReadSeeker: readSeeker}
@@ -92,7 +98,9 @@ func (c httpClient) SubmitJSON(ctx context.Context, method, endpoint string, bod
 	return c.executeRequest(ctx, method, endpoint, request)
 }
 
-// executeRequest executes the request and handles the response.
+// executeRequest accepts a response only when both the HTTP status and
+// Telegram's JSON "ok" field indicate success. Telegram error payloads take
+// precedence over the raw-body fallback.
 func (c httpClient) executeRequest(ctx context.Context, method, endpoint string, request *resty.Request) error {
 	if ctx == nil {
 		return errors.New("context is nil")
@@ -108,6 +116,8 @@ func (c httpClient) executeRequest(ctx context.Context, method, endpoint string,
 		Execute(method, endpoint)
 	if err != nil {
 		if urlErr, ok := errors.AsType[*url.Error](err); ok {
+			// The request URL contains the bot token. Return the underlying
+			// transport error so logs cannot expose the credential-bearing URL.
 			return fmt.Errorf("telegram api request failed: %w", urlErr.Err)
 		}
 

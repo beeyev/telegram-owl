@@ -15,6 +15,8 @@ import (
 // MaxCaptionLength defines the maximum length allowed for an InputMedia caption.
 const MaxCaptionLength = 1024
 
+// Options contains the user-visible sendMediaGroup parameters supported by the
+// CLI. Attachments must remain open until Sender.Send returns.
 type Options struct {
 	ChatID              string
 	MessageThreadID     string
@@ -34,9 +36,9 @@ type payload struct {
 	ProtectContent      bool   `json:"protect_content,omitempty"`
 }
 
-// media represents an individual media item for the Telegram API request.
+// media is one InputMedia entry in Telegram's JSON-encoded media form field.
 type media struct {
-	Type       string `json:"type"` // "photo", "video", etc.
+	Type       string `json:"type"`
 	Media      string `json:"media"`
 	Caption    string `json:"caption,omitempty"`
 	ParseMode  string `json:"parse_mode,omitempty"`
@@ -48,7 +50,6 @@ func (o *Options) preparePayload() (*payload, []httpclient.MultipartFile, error)
 		return nil, nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Build media and file data
 	medias, multipartFiles := o.prepareMedia()
 
 	mediaJSON, err := json.Marshal(medias)
@@ -87,7 +88,8 @@ func (o *Options) prepareMedia() ([]media, []httpclient.MultipartFile) {
 		})
 	}
 
-	// Set caption for the last media item, this way it will be shown as a caption for the whole media group.
+	// prepareMedia is called only after validate, so medias always has a last
+	// element. Telegram renders the last item's caption with the whole album.
 	lastMedia := &medias[len(medias)-1]
 	lastMedia.Caption = o.Caption
 	if o.Caption != "" {
