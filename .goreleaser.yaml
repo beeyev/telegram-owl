@@ -154,11 +154,29 @@ dockers_v2:
       - linux/arm/v7
     sbom: true
     labels:
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.name": "{{.ProjectName}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.title": "{{.ProjectName}}"
+      "org.opencontainers.image.description": "CLI utility to send messages and files to Telegram chats and channels"
+      "org.opencontainers.image.authors": "Alexander Tebiev <alexander.tebiev@gmail.com>"
+      "org.opencontainers.image.vendor": "Alexander Tebiev"
+      "org.opencontainers.image.url": "https://github.com/beeyev/telegram-owl"
+      "org.opencontainers.image.documentation": "https://github.com/beeyev/telegram-owl/blob/master/README.md"
       "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.licenses": "MIT"
+    annotations:
+      "org.opencontainers.image.title": "{{.ProjectName}}"
+      "org.opencontainers.image.description": "CLI utility to send messages and files to Telegram chats and channels"
+      "org.opencontainers.image.authors": "Alexander Tebiev <alexander.tebiev@gmail.com>"
+      "org.opencontainers.image.vendor": "Alexander Tebiev"
+      "org.opencontainers.image.url": "https://github.com/beeyev/telegram-owl"
+      "org.opencontainers.image.documentation": "https://github.com/beeyev/telegram-owl/blob/master/README.md"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.licenses": "MIT"
 
   # Local smoke-test image build used by `make release-local`.
   # It builds only linux/amd64 so Docker packaging can be tested without ARM buildx setup.
