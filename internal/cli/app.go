@@ -72,7 +72,7 @@ func flags() []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:     "format",
-			Usage:    "Message format options, possible values: markdown, html",
+			Usage:    "Message format options: markdown, html, rich-markdown, rich-html",
 			Aliases:  []string{"f"},
 			OnlyOnce: true,
 			Config:   cli.StringConfig{TrimSpace: true},

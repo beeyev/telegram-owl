@@ -9,6 +9,7 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 ## Features
 
 - Send text messages
+- Send Rich Markdown and Rich HTML messages
 - Attach multiple files
 - Silent messages (no notification sound)
 - Protect messages (disable forwarding/saving)
@@ -99,7 +100,7 @@ telegram-owl \
 | Flag                  | Description                                                   |
 |-----------------------|---------------------------------------------------------------|
 | `--message`, `-m`      | Text message to send                                          |
-| `--format`, `-f`         | Message format options, possible values: `markdown`, `html` |
+| `--format`, `-f`         | Message format: `markdown`, `html`, `rich-markdown`, or `rich-html` |
 | `--stdin`              | Read message content from `stdin`                             |
 | `--attach`, `-a`       | Attach files (comma-separated or multiple flags)              |
 | `--as-document`, `-d`  | Force all files to be sent as documents                       |
@@ -129,7 +130,30 @@ telegram-owl -t $BOT_TOKEN -c 123456 --format=markdown -m "*Bold text* via Markd
 telegram-owl -t $BOT_TOKEN -c 123456 --format=html -m '<b>Bold text</b> via HTML and <a href="http://www.example.com/">inline URL</a>'
 ```
 
-> Message formatting is supported for both `markdown` and `html` formats. But it does not work when text and files are sent together.
+### Send a Rich Markdown Message
+
+Rich Markdown supports GitHub Flavored Markdown constructs such as headings,
+tables, task lists, and fenced code blocks. Piping a file preserves its leading
+and internal whitespace.
+
+```console
+telegram-owl -t $BOT_TOKEN -c 123456 --format=rich-markdown --stdin < deployment-report.md
+```
+
+Use `rich-html` for Telegram Rich HTML:
+
+```console
+telegram-owl -t $BOT_TOKEN -c 123456 --format=rich-html -m '<h1>Deployment</h1><p><strong>Passed</strong></p>'
+```
+
+The `markdown` and `html` formats use `sendMessage` and can format attachment
+captions. The `rich-markdown` and `rich-html` formats use
+[`sendRichMessage`](https://core.telegram.org/bots/api#sendrichmessage). When
+attachments are present, Telegram Owl sends them without a caption, then sends
+the rich message separately. `--no-link-preview` is not available for rich
+messages. The attachment upload and rich message are separate requests and are
+not atomic. If the second request fails, the attachments remain delivered and
+the error reports that partial delivery.
 
 ### Send Files with a Message
 

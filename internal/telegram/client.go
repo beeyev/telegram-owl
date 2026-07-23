@@ -7,12 +7,14 @@ import (
 	"github.com/beeyev/telegram-owl/internal/telegram/httpclient"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmediagroup"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
+	"github.com/beeyev/telegram-owl/internal/telegram/method/sendrichmessage"
 )
 
 // Client groups the Telegram operations exposed to the CLI.
 type Client struct {
-	SendMessage    sendmessage.Sender
-	SendMediaGroup sendmediagroup.Sender
+	SendMessage     sendmessage.Sender
+	SendMediaGroup  sendmediagroup.Sender
+	SendRichMessage sendrichmessage.Sender
 }
 
 // NewClient builds all method senders over one configured HTTP transport.
@@ -23,7 +25,8 @@ func NewClient(apiBotURL, token, proxyURL string) (*Client, error) {
 	}
 
 	return &Client{
-		SendMessage:    sendmessage.New(httpClient),
-		SendMediaGroup: sendmediagroup.New(httpClient),
+		SendMessage:     sendmessage.New(httpClient),
+		SendMediaGroup:  sendmediagroup.New(httpClient),
+		SendRichMessage: sendrichmessage.New(httpClient),
 	}, nil
 }

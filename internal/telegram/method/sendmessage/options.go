@@ -69,7 +69,10 @@ func (o *Options) validate() error {
 	if o.Text == "" {
 		validationErrors = append(validationErrors, "message is required")
 	}
-	if textLen := utf8.RuneCountInString(o.Text); textLen > MaxTextLength {
+	// Telegram applies the limit after parsing entities. Without duplicating
+	// Telegram's parser, only plain-text length can be validated accurately.
+	textLen := utf8.RuneCountInString(o.Text)
+	if o.ParseMode == "" && textLen > MaxTextLength {
 		validationErrors = append(
 			validationErrors,
 			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxTextLength, textLen),
