@@ -11,6 +11,7 @@ import (
 	"github.com/beeyev/telegram-owl/internal/telegram/common/attachment"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmediagroup"
 	"github.com/beeyev/telegram-owl/internal/telegram/method/sendmessage"
+	"github.com/beeyev/telegram-owl/internal/telegram/method/sendrichmessage"
 )
 
 type action struct {
@@ -34,10 +35,33 @@ func (a *action) execute() error {
 		return errors.New("nothing to send: provide a --message or --attach flag")
 	}
 
-	// Text-only sends use sendMessage because Telegram media groups require at
-	// least one attachment.
+	isRichMessage := sendrichmessage.IsFormat(a.MessageFormat)
+
+	// Text-only sends use the method selected by the format because Telegram
+	// media groups require at least one attachment.
 	if len(a.attachmentsPaths) == 0 {
+		if isRichMessage {
+			return a.sendRichMessage(a.message)
+		}
+
 		return a.sendMessage(a.message)
+	}
+
+	// InputRichMessage media is intentionally out of scope. Send attachments
+	// without a caption, then submit the rich text as a separate message.
+	if isRichMessage {
+		if err := a.sendMediaGroup(""); err != nil {
+			return err
+		}
+		if a.message == "" {
+			return nil
+		}
+
+		if err := a.sendRichMessage(a.message); err != nil {
+			return fmt.Errorf("attachments sent, but rich message failed: %w", err)
+		}
+
+		return nil
 	}
 
 	// Telegram applies the caption limit after parsing entities. Raw length can
@@ -69,6 +93,21 @@ func (a *action) sendMessage(message string) error {
 		ProtectContent:      a.protect,
 		MessageThreadID:     a.threadID,
 		DisableLinkPreview:  a.noLinkPreview,
+	})
+}
+
+func (a *action) sendRichMessage(message string) error {
+	if message == "" {
+		return errors.New("message is required")
+	}
+
+	return a.client.SendRichMessage.Send(a.ctx, &sendrichmessage.Options{
+		ChatID:              a.chatID,
+		MessageThreadID:     a.threadID,
+		Text:                message,
+		Format:              a.MessageFormat,
+		DisableNotification: a.silent,
+		ProtectContent:      a.protect,
 	})
 }
 

@@ -92,7 +92,7 @@ func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassign
 	args := getTestArgs([]string{"--token=123:abc", "--chat=75757", "--stdin"})
 
 	r, w, _ := os.Pipe()
-	_, _ = w.WriteString("hello from stdin\n")
+	_, _ = w.WriteString("    hello from stdin\n")
 	_ = w.Close()
 	originalStdin := os.Stdin
 	t.Cleanup(func() {
@@ -108,7 +108,57 @@ func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassign
 	err := app.Run(t.Context(), args)
 	require.NoError(t, err)
 
-	assert.JSONEq(t, `{"chat_id":"75757","text":"hello from stdin"}`, capturedBody)
+	assert.JSONEq(t, `{"chat_id":"75757","text":"    hello from stdin"}`, capturedBody)
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendRichMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassigns process-global os.Stdin.
+	var capturedBody string
+	var capturedPath string
+
+	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		bodyBytes, err := io.ReadAll(r.Body)
+		assert.NoError(t, err)
+
+		capturedBody = strings.TrimSpace(string(bodyBytes))
+		capturedPath = r.URL.Path
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	stdinReader, stdinWriter, err := os.Pipe()
+	require.NoError(t, err)
+	_, err = stdinWriter.WriteString("  # Deployment\n\n- passed\n")
+	require.NoError(t, err)
+	require.NoError(t, stdinWriter.Close())
+	t.Cleanup(func() {
+		require.NoError(t, stdinReader.Close())
+	})
+
+	originalStdin := os.Stdin
+	t.Cleanup(func() {
+		//nolint:reassign // Restore process-global stdin after this test.
+		os.Stdin = originalStdin
+	})
+	//nolint:reassign // Exercise rich message input from a pipe.
+	os.Stdin = stdinReader
+
+	app := cli.NewApp(mockServer.URL)
+	app.Writer = outputBuf
+	err = app.Run(t.Context(), getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--stdin",
+		"--format=rich-markdown",
+	}))
+	require.NoError(t, err)
+
+	assert.Equal(t, `/bot123:abc/sendRichMessage`, capturedPath)
+	assert.JSONEq(t, `{
+		"chat_id":"75757",
+		"rich_message":{"markdown":"  # Deployment\n\n- passed"}
+	}`, capturedBody)
 	assert.Empty(t, outputBuf.String())
 }
 
@@ -267,6 +317,77 @@ func TestSendMessage_Success(t *testing.T) {
 	}
 }
 
+func TestSendRichMessage_Success(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                string
+		args                []string
+		expectedJSONPayload string
+	}{
+		{
+			name: "rich markdown",
+			args: []string{
+				"--token=123:abc",
+				"--chat=75757",
+				"--message=# Deployment\n\n**Passed**",
+				"--format=rich-markdown",
+			},
+			expectedJSONPayload: `{
+				"chat_id":"75757",
+				"rich_message":{"markdown":"# Deployment\n\n**Passed**"}
+			}`,
+		},
+		{
+			name: "rich html with delivery options",
+			args: []string{
+				"--token=123:abc",
+				"--chat=75757",
+				"--message=<b>Passed</b>",
+				"--format=rich-html",
+				"--thread=1234",
+				"--silent=true",
+				"--protect=true",
+			},
+			expectedJSONPayload: `{
+				"chat_id":"75757",
+				"message_thread_id":"1234",
+				"rich_message":{"html":"<b>Passed</b>"},
+				"disable_notification":true,
+				"protect_content":true
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var capturedBody string
+			var capturedPath string
+			mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				bodyBytes, err := io.ReadAll(r.Body)
+				assert.NoError(t, err)
+				capturedBody = strings.TrimSpace(string(bodyBytes))
+				capturedPath = r.URL.Path
+
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			})
+
+			app := cli.NewApp(mockServer.URL)
+			app.Writer = outputBuf
+
+			err := app.Run(t.Context(), getTestArgs(tt.args))
+			require.NoError(t, err)
+
+			assert.Equal(t, `/bot123:abc/sendRichMessage`, capturedPath)
+			assert.JSONEq(t, tt.expectedJSONPayload, capturedBody)
+			assert.Empty(t, outputBuf.String())
+		})
+	}
+}
+
 func TestSendMediaGroup_Success(t *testing.T) {
 	t.Parallel()
 
@@ -393,6 +514,192 @@ func TestSendMediaGroup_LongMessageSendsTextSeparately(t *testing.T) {
 	assert.Empty(t, outputBuf.String())
 }
 
+func TestSendMediaGroup_RichMessageSendsTextSeparately(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                    string
+		format                  string
+		message                 string
+		expectedRichMessageJSON string
+	}{
+		{
+			name:                    "rich markdown",
+			format:                  "rich-markdown",
+			message:                 "**Deployment passed**",
+			expectedRichMessageJSON: `{"markdown":"**Deployment passed**"}`,
+		},
+		{
+			name:                    "rich html",
+			format:                  "rich-html",
+			message:                 "<strong>Deployment passed</strong>",
+			expectedRichMessageJSON: `{"html":"<strong>Deployment passed</strong>"}`,
+		},
+		{
+			name:   "attachments only",
+			format: "rich-markdown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testRichAttachmentRouting(
+				t,
+				tt.format,
+				tt.message,
+				tt.expectedRichMessageJSON,
+			)
+		})
+	}
+}
+
+func testRichAttachmentRouting(t *testing.T, format, message, expectedRichMessageJSON string) {
+	t.Helper()
+
+	type capturedRequest struct {
+		urlPath string
+		body    string
+		media   string
+	}
+
+	var captured []capturedRequest
+	server, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		request := capturedRequest{urlPath: r.URL.Path}
+		if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+			if !assert.NoError(t, r.ParseMultipartForm(32<<20)) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			request.media = r.FormValue("media")
+		} else {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if !assert.NoError(t, err) {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			request.body = strings.TrimSpace(string(bodyBytes))
+		}
+		captured = append(captured, request)
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	attachmentFile, err := os.CreateTemp(t.TempDir(), "report.txt")
+	require.NoError(t, err)
+	defer attachmentFile.Close()
+
+	args := []string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + attachmentFile.Name(),
+		"--as-document=true",
+		"--format=" + format,
+	}
+	if message != "" {
+		args = append(args, "--message="+message)
+	}
+
+	app := cli.NewApp(server.URL)
+	app.Writer = outputBuf
+	err = app.Run(t.Context(), getTestArgs(args))
+	require.NoError(t, err)
+
+	expectedRequestCount := 1
+	if expectedRichMessageJSON != "" {
+		expectedRequestCount = 2
+	}
+	require.Len(t, captured, expectedRequestCount)
+	assert.Equal(t, `/bot123:abc/sendMediaGroup`, captured[0].urlPath)
+	assert.JSONEq(t, `[{"type":"document","media":"attach://file0"}]`, captured[0].media)
+
+	if expectedRichMessageJSON != "" {
+		assert.Equal(t, `/bot123:abc/sendRichMessage`, captured[1].urlPath)
+		assert.JSONEq(t, `{
+			"chat_id":"75757",
+			"rich_message":`+expectedRichMessageJSON+`
+		}`, captured[1].body)
+	}
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendMediaGroup_RichMessageReportsPartialDelivery(t *testing.T) {
+	t.Parallel()
+
+	var capturedPaths []string
+	server, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPaths = append(capturedPaths, r.URL.Path)
+		_, err := io.Copy(io.Discard, r.Body)
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		if strings.HasSuffix(r.URL.Path, "/sendRichMessage") {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"ok":false,"error_code":400,"description":"rich message rejected"}`))
+			return
+		}
+
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	attachmentFile, err := os.CreateTemp(t.TempDir(), "report.txt")
+	require.NoError(t, err)
+	defer attachmentFile.Close()
+
+	app := cli.NewApp(server.URL)
+	app.Writer = outputBuf
+	err = app.Run(t.Context(), getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + attachmentFile.Name(),
+		"--as-document=true",
+		"--message=**Deployment passed**",
+		"--format=rich-markdown",
+	}))
+
+	require.ErrorContains(t, err, "attachments sent, but rich message failed")
+	assert.Equal(t, []string{
+		`/bot123:abc/sendMediaGroup`,
+		`/bot123:abc/sendRichMessage`,
+	}, capturedPaths)
+	assert.Empty(t, outputBuf.String())
+}
+
+func TestSendMediaGroup_RichMessageStopsAfterAttachmentFailure(t *testing.T) {
+	t.Parallel()
+
+	var capturedPaths []string
+	server, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPaths = append(capturedPaths, r.URL.Path)
+		_, err := io.Copy(io.Discard, r.Body)
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"ok":false,"error_code":400,"description":"attachment rejected"}`))
+	})
+
+	attachmentFile, err := os.CreateTemp(t.TempDir(), "report.txt")
+	require.NoError(t, err)
+	defer attachmentFile.Close()
+
+	app := cli.NewApp(server.URL)
+	app.Writer = outputBuf
+	err = app.Run(t.Context(), getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + attachmentFile.Name(),
+		"--as-document=true",
+		"--message=**Deployment passed**",
+		"--format=rich-markdown",
+	}))
+
+	require.ErrorContains(t, err, "send attachments")
+	assert.Equal(t, []string{`/bot123:abc/sendMediaGroup`}, capturedPaths)
+	assert.Empty(t, outputBuf.String())
+}
+
 func TestSendMediaGroup_FormattedCaptionDelegatesLengthValidation(t *testing.T) {
 	t.Parallel()
 
@@ -471,6 +778,17 @@ func Test_ErrorResponse(t *testing.T) {
 			name: "format flag with incorrect value",
 			args: []string{"--token=whatever", "--chat=whatever", "--message=hello", "--format=invalid"},
 			want: "incorrect value for --format flag",
+		},
+		{
+			name: "link preview option with rich format",
+			args: []string{
+				"--token=whatever",
+				"--chat=whatever",
+				"--message=hello",
+				"--format=rich-markdown",
+				"--no-link-preview",
+			},
+			want: "--no-link-preview is not supported with rich message formats",
 		},
 	}
 	for _, tt := range tests {
