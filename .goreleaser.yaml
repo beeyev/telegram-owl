@@ -110,7 +110,7 @@ release:
     Download for macOS [64bit](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_64bit.tar.gz) / [Arm64](https://github.com/beeyev/telegram-owl/releases/download/v{{.Version}}/telegram-owl_v{{.Version}}_macOS_ARM64.tar.gz)
 
     ## Docker
-    Multi-arch images are available on GHCR, Docker Hub, and Quay:
+    Multi-arch images are available on [Docker Hub](https://hub.docker.com/r/beeyev/telegram-owl), [GHCR](https://github.com/beeyev/telegram-owl/pkgs/container/telegram-owl), and [Quay](https://quay.io/repository/beeyev/telegram-owl):
     ```console
     docker pull ghcr.io/beeyev/telegram-owl:{{.Version}}
     ```
