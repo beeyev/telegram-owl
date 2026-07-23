@@ -1,3 +1,4 @@
+// Package sendmediagroup validates and sends Telegram media albums.
 package sendmediagroup
 
 import (
@@ -11,7 +12,7 @@ import (
 
 const telegramAPIEndpoint = "sendMediaGroup"
 
-// Sender provides an interface for sending text messages to a Telegram chat.
+// Sender sends an attachment group to a Telegram chat.
 type Sender interface {
 	Send(ctx context.Context, opts *Options) error
 }
@@ -20,26 +21,24 @@ type mediaSender struct {
 	httpClient httpclient.HTTPDoer
 }
 
-// New returns a new instance of Sender.
+// New returns a media sender backed by httpClient.
 func New(httpClient httpclient.HTTPDoer) Sender {
 	return mediaSender{httpClient: httpClient}
 }
 
-// Send sends a group of photos, videos, documents or audios as an album
-// See: https://core.telegram.org/bots/api#sendmediagroup
+// Send validates opts and submits one sendMediaGroup multipart request.
+// See https://core.telegram.org/bots/api#sendmediagroup.
 func (s mediaSender) Send(ctx context.Context, opts *Options) error {
 	payloadData, multipartFiles, err := opts.preparePayload()
 	if err != nil {
 		return fmt.Errorf("send media: %w", err)
 	}
 
-	// Convert the struct payload into a form payload
 	formFields, err := util.StructToFormPayload(payloadData)
 	if err != nil {
 		return fmt.Errorf("unable to create form fields from the payload. Details: %w", err)
 	}
 
-	// Submit the multipart/form-data request to Telegram
 	if err = s.httpClient.SubmitMultipart(
 		ctx,
 		http.MethodPost,

@@ -35,3 +35,4 @@ testData/
 # Added by goreleaser init:
 dist/
 .ignore/
+.serena/

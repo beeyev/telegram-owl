@@ -1,3 +1,5 @@
+// Command telegram-owl sends text messages and file attachments through the
+// Telegram Bot API.
 package main
 
 import (
@@ -5,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 
 	"github.com/beeyev/telegram-owl/internal/cli"
@@ -13,7 +14,6 @@ import (
 
 const apiBotURL = "https://api.telegram.org"
 
-// main CLI application entrypoint.
 func main() {
 	if err := run(); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
@@ -22,11 +22,11 @@ func main() {
 	}
 }
 
-// run is the entry point of the program. The code is in separate function to allow executing deferred functions
-// before exiting (os.Exit does not execute deferred functions).
+// run keeps signal cleanup on a normal return path. main calls [os.Exit] only
+// after run's deferred functions have completed.
 func run() error {
-	defer runtime.Gosched() // increase the chance of running deferred functions before exiting
-
+	// Cancel in-flight HTTP requests on both interactive interrupts and
+	// container/process termination.
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 

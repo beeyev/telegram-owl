@@ -5,11 +5,12 @@ import (
 	"strings"
 )
 
-// DetectType determines the file type based on its extension.
-// Falls back to Document if unknown.
+// DetectType maps a case-insensitive filename extension to a Telegram media
+// type. Empty names, missing extensions, and unknown extensions safely fall
+// back to Document.
 func DetectType(fileName string) AType {
 	if fileName == "" {
-		panic("file name is empty")
+		return Document
 	}
 
 	ext := strings.TrimPrefix(strings.ToLower(filepath.Ext(fileName)), ".")

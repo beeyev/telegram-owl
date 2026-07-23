@@ -1,4 +1,4 @@
-.PHONY: *
+.PHONY: build fmt help lint lint-fix mod release-local test test-race vet
 .DEFAULT_GOAL := help
 
 APP_NAME := telegram-owl
@@ -29,5 +29,14 @@ fmt: ## Format code
 test: ## Run tests
 	go test ./...
 
-lint: ## golangci-lint
+test-race: ## Run tests with race detection and randomized order
+	go test -race -shuffle=on ./...
+
+vet: ## Run Go's static analyzer
+	go vet ./...
+
+lint: ## Run golangci-lint
+	go tool golangci-lint run
+
+lint-fix: ## Run golangci-lint and apply safe fixes
 	go tool golangci-lint run --fix

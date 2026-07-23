@@ -20,13 +20,13 @@ jobs:
   unit-tests:
     name: ✅ Run Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: 📦 Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🧰 Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           check-latest: true
@@ -36,10 +36,13 @@ jobs:
       - name: 📖 Display Go Version
         run: go version
 
-      - name: 🔍 Run Unit Tests with Coverage
-        run: go test -v ./...
-        env:
-          CGO_ENABLED: 0
+      - name: 🔍 Run Unit Tests with Race Detection and Coverage
+        run: go test -race -shuffle=on -coverprofile=coverage.out ./...
+
+      - name: 📦 Verify Module Metadata
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
 
       - name: 🧪 Build (Validation)
         run: go build -v ./...
@@ -54,10 +57,10 @@ jobs:
       pull-requests: write
     steps:
       - name: 📦 Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🧰 Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           check-latest: true

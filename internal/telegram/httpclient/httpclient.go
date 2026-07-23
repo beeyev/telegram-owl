@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"time"
 
@@ -21,14 +22,16 @@ type successResponse struct {
 }
 
 type errorResponse struct {
-	Ok          bool   `json:"ok"`
+	OK          bool   `json:"ok"`
 	ErrorCode   int    `json:"error_code,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
+// New creates a Telegram HTTP transport. apiBotURL should be the API root,
+// without the bot token path; tests may provide an httptest server URL.
 func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 	if apiBotURL == "" {
-		return nil, errors.New("apiBotURL value is not provided")
+		return nil, errors.New("api bot url value is not provided")
 	}
 
 	if token == "" {
@@ -37,17 +40,18 @@ func New(apiBotURL, token, proxyURL string) (HTTPDoer, error) {
 
 	baseURLWithToken, err := url.JoinPath(apiBotURL, "/bot"+token)
 	if err != nil {
-		return nil, fmt.Errorf("invalid API URL: %w", err)
+		return nil, fmt.Errorf("invalid api url: %w", err)
 	}
 
+	// Keep Resty debug logging disabled. The base URL contains the bot token,
+	// which request diagnostics could expose.
 	restyClient := resty.New().
-		// SetDebug(true).
 		SetBaseURL(baseURLWithToken).
 		SetTimeout(defaultRequestTimeout)
 
 	if proxyURL != "" {
 		if _, err = url.ParseRequestURI(proxyURL); err != nil {
-			return nil, fmt.Errorf("invalid proxy URL: %w", err)
+			return nil, fmt.Errorf("invalid proxy url: %w", err)
 		}
 
 		restyClient.SetProxy(proxyURL)
@@ -69,10 +73,22 @@ func (c httpClient) SubmitMultipart(
 	request.SetMultipartFormData(fields)
 
 	for _, mFile := range files {
-		request.SetFileReader(mFile.FieldName, mFile.FileName, mFile.FileReader)
+		request.SetFileReader(mFile.FieldName, mFile.FileName, hideCloser(mFile.FileReader))
 	}
 
 	return c.executeRequest(ctx, method, endpoint, request)
+}
+
+// hideCloser prevents Resty v3 from taking ownership of caller-managed files.
+// Resty closes multipart readers after Execute, so embedding only [io.Reader]
+// hides Close. Preserve [io.ReadSeeker] when available because Resty uses seeking
+// to inspect and retry multipart bodies.
+func hideCloser(reader io.Reader) io.Reader {
+	if readSeeker, ok := reader.(io.ReadSeeker); ok {
+		return struct{ io.ReadSeeker }{ReadSeeker: readSeeker}
+	}
+
+	return struct{ io.Reader }{Reader: reader}
 }
 
 func (c httpClient) SubmitJSON(ctx context.Context, method, endpoint string, body any) error {
@@ -82,10 +98,12 @@ func (c httpClient) SubmitJSON(ctx context.Context, method, endpoint string, bod
 	return c.executeRequest(ctx, method, endpoint, request)
 }
 
-// executeRequest executes the request and handles the response.
+// executeRequest accepts a response only when both the HTTP status and
+// Telegram's JSON "ok" field indicate success. Telegram error payloads take
+// precedence over the raw-body fallback.
 func (c httpClient) executeRequest(ctx context.Context, method, endpoint string, request *resty.Request) error {
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("context is nil")
 	}
 
 	successPayload := &successResponse{}
@@ -94,18 +112,24 @@ func (c httpClient) executeRequest(ctx context.Context, method, endpoint string,
 	resp, err := request.
 		SetContext(ctx).
 		SetResult(successPayload).
-		SetError(errorPayload).
+		SetResultError(errorPayload).
 		Execute(method, endpoint)
 	if err != nil {
-		return fmt.Errorf("transport error: %w", err)
+		if urlErr, ok := errors.AsType[*url.Error](err); ok {
+			// The request URL contains the bot token. Return the underlying
+			// transport error so logs cannot expose the credential-bearing URL.
+			return fmt.Errorf("telegram api request failed: %w", urlErr.Err)
+		}
+
+		return fmt.Errorf("telegram api request failed: %w", err)
 	}
 
-	if resp.IsSuccess() && successPayload.OK {
+	if resp.IsStatusSuccess() && successPayload.OK {
 		return nil
 	}
 
 	if errorPayload.Description != "" {
-		return fmt.Errorf("API error [%s] (HTTP %d): %d - %s",
+		return fmt.Errorf("telegram api error [%s] (http %d): %d - %s",
 			endpoint, resp.StatusCode(), errorPayload.ErrorCode, errorPayload.Description)
 	}
 

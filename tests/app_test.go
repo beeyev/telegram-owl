@@ -16,7 +16,7 @@ import (
 )
 
 func getTestArgs(args []string) []string {
-	return append(os.Args[0:1], args...)
+	return append([]string{os.Args[0]}, args...)
 }
 
 func setupMockServer(t *testing.T, handler http.HandlerFunc) (*httptest.Server, *bytes.Buffer) {
@@ -39,6 +39,40 @@ func TestNoFlags(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, outputBuf.String(), "GLOBAL OPTIONS")
+	assert.Contains(t, outputBuf.String(), "VERSION:")
+	assert.Contains(t, outputBuf.String(), "--version")
+}
+
+func TestVersionOutput(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		version string
+		flag    string
+	}{
+		{name: "release version", version: "1.2.3", flag: "--version"},
+		{name: "prefixed version with short flag", version: "v1.2.3", flag: "-v"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			outputBuf := new(bytes.Buffer)
+			app := cli.NewApp("dummy")
+			app.Version = tt.version
+			app.Writer = outputBuf
+
+			err := app.Run(t.Context(), getTestArgs([]string{tt.flag}))
+			require.NoError(t, err)
+			assert.Equal(
+				t,
+				"telegram-owl v1.2.3\nAlexander Tebiev - https://github.com/beeyev\n",
+				outputBuf.String(),
+			)
+		})
+	}
 }
 
 func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassigns process-global os.Stdin.
@@ -75,6 +109,59 @@ func TestSendMessage_FromStdin(t *testing.T) { //nolint:paralleltest // Reassign
 	require.NoError(t, err)
 
 	assert.JSONEq(t, `{"chat_id":"75757","text":"hello from stdin"}`, capturedBody)
+	assert.Empty(t, outputBuf.String())
+}
+
+//nolint:paralleltest // Reassigns process-global os.Stdin.
+func TestSendAttachment_WithStdinFromCharacterDevice(
+	t *testing.T,
+) {
+	var capturedPath string
+	mockServer, outputBuf := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		_, err := io.Copy(io.Discard, r.Body)
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write([]byte(`{"ok": true}`))
+		assert.NoError(t, err)
+	})
+
+	attachmentFile, err := os.CreateTemp(t.TempDir(), "attachment.txt")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, attachmentFile.Close())
+	})
+
+	stdin, err := os.Open(os.DevNull)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, stdin.Close())
+	})
+	stdinInfo, err := stdin.Stat()
+	require.NoError(t, err)
+	require.NotZero(t, stdinInfo.Mode()&os.ModeCharDevice)
+
+	originalStdin := os.Stdin
+	t.Cleanup(func() {
+		//nolint:reassign // Restore process-global stdin after this test.
+		os.Stdin = originalStdin
+	})
+	//nolint:reassign // Exercise --stdin with a character device.
+	os.Stdin = stdin
+
+	app := cli.NewApp(mockServer.URL)
+	app.Writer = outputBuf
+	err = app.Run(t.Context(), getTestArgs([]string{
+		"--token=123:abc",
+		"--chat=75757",
+		"--attach=" + attachmentFile.Name(),
+		"--as-document=true",
+		"--stdin",
+	}))
+
+	require.NoError(t, err)
+	assert.Equal(t, `/bot123:abc/sendMediaGroup`, capturedPath)
 	assert.Empty(t, outputBuf.String())
 }
 
@@ -331,7 +418,7 @@ func Test_ErrorResponse(t *testing.T) {
 			want: "nothing to send: provide a --message or --attach flag",
 		},
 		{
-			name: "no message and no attachments",
+			name: "attachment does not exist",
 			args: []string{"--token=whatever", "--chat=whatever", "--attach=does-not-exist.jpg"},
 			want: "failed to load attachments",
 		},

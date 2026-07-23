@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -15,7 +16,7 @@ type inputValues struct {
 
 func (iv *inputValues) validate() error {
 	if iv.cmd.String("token") == "" {
-		//nolint:revive,staticcheck // Probably i need to render this message in a different way
+		//nolint:revive,staticcheck // Multiline CLI guidance intentionally uses sentence casing and punctuation.
 		return errors.New(`missing required flag: --token
 Set it via the --token flag or the TELEGRAM_OWL_TOKEN environment variable.
 
@@ -26,7 +27,7 @@ Run with --help to see all options.`)
 	}
 
 	if iv.cmd.String("chat") == "" {
-		//nolint:revive,staticcheck // Probably i need to render this message in a different way
+		//nolint:revive,staticcheck // Multiline CLI guidance intentionally uses sentence casing and punctuation.
 		return errors.New(`missing required flag: --chat
 Set it via the --chat flag or the TELEGRAM_OWL_CHAT environment variable.
 
@@ -45,27 +46,36 @@ Run with --help to see all options.`)
 	return nil
 }
 
-func (iv *inputValues) getMessage() string {
-	// Return the message if provided via `--message`
+func (iv *inputValues) getMessage() (string, error) {
+	// An explicit flag wins over stdin. This avoids blocking or consuming a
+	// pipeline when both inputs are provided.
 	if msg := iv.cmd.String("message"); msg != "" {
-		return msg
+		return msg, nil
 	}
 
-	// Read message from stdin if `--stdin` flag is used
 	if !iv.cmd.Bool("stdin") {
-		return ""
+		return "", nil
 	}
 
-	// Check if stdin is actually piped data
 	stat, err := os.Stdin.Stat()
-	if err != nil || (stat.Mode()&os.ModeCharDevice) != 0 {
-		return ""
+	if err != nil {
+		return "", fmt.Errorf("inspect stdin: %w", err)
+	}
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		// --stdin may accompany attachments to request an optional caption. An
+		// interactive stdin therefore means "no caption" when attachments exist,
+		// but is an error for a text-only send where it would send nothing.
+		if len(iv.cmd.StringSlice("attach")) > 0 {
+			return "", nil
+		}
+
+		return "", errors.New("stdin does not contain piped data")
 	}
 
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("read stdin: %w", err)
 	}
 
-	return strings.TrimSpace(string(data))
+	return strings.TrimSpace(string(data)), nil
 }

@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 )
 
-// Loader validates and loads attachments according to configured limits.
+// Loader validates, classifies, and opens attachments according to configured
+// limits. The caller owns returned files only when loading succeeds.
 type Loader struct {
 	FileOpener                  FileOpener
 	IsEverythingDocument        bool
@@ -16,6 +17,9 @@ type Loader struct {
 	MaxTotalSizeBytes           int64
 }
 
+// LoadMultipleAttachments opens every path and returns a Telegram-compatible
+// group. On failure it closes the current file and everything opened earlier,
+// joining any cleanup failures with the primary error.
 func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error) {
 	if err := l.validateAttachments(filePaths); err != nil {
 		return nil, err
@@ -28,19 +32,16 @@ func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error
 	for _, path := range filePaths {
 		attachment, err := l.loadAttachment(path)
 		if err != nil {
-			attachments.Close() //nolint:gosec // Best-effort cleanup before returning the original error.
-			return nil, err
+			return nil, errors.Join(err, attachments.Close())
 		}
 
 		totalSizeBytes += attachment.SizeBytes
 		if totalSizeBytes > l.MaxTotalSizeBytes {
-			// TODO find better way to close attachments
-			attachment.Close()  //nolint:gosec // Best-effort cleanup before returning the size error.
-			attachments.Close() //nolint:gosec // Best-effort cleanup before returning the size error.
-			return nil, fmt.Errorf(
+			limitErr := fmt.Errorf(
 				"total attachments size exceeds the max allowed %d MB",
 				bytesToMegabytes(l.MaxTotalSizeBytes),
 			)
+			return nil, errors.Join(limitErr, attachment.Close(), attachments.Close())
 		}
 
 		attachments = append(attachments, attachment)
@@ -50,6 +51,9 @@ func (l *Loader) LoadMultipleAttachments(filePaths []string) (Attachments, error
 	}
 
 	if !l.IsEverythingDocument && !isOnlyPhotoOrVideo(typesFound) {
+		// A photo/video album may mix those two types. If any document or audio
+		// is present, normalize the entire group to documents so Telegram accepts
+		// one compatible media class.
 		for _, attach := range attachments {
 			attach.AType = Document
 		}
@@ -67,9 +71,13 @@ func (l *Loader) loadAttachment(filePath string) (*Attachment, error) {
 	attachmentType := l.determineAttachmentType(filePath, openedFile.SizeBytes)
 
 	if openedFile.SizeBytes > l.MaxAttachmentSizeBytes {
-		openedFile.File.Close() //nolint:gosec // Best-effort cleanup before returning the size error.
-		return nil, fmt.Errorf("attachment %q: size %d MB exceeds the max allowed of %d MB",
-			filePath, bytesToMegabytes(openedFile.SizeBytes), bytesToMegabytes(l.MaxAttachmentSizeBytes))
+		sizeErr := fmt.Errorf(
+			"attachment %q: size %d MB exceeds the max allowed of %d MB",
+			filePath,
+			bytesToMegabytes(openedFile.SizeBytes),
+			bytesToMegabytes(l.MaxAttachmentSizeBytes),
+		)
+		return nil, errors.Join(sizeErr, openedFile.File.Close())
 	}
 
 	return &Attachment{
@@ -87,13 +95,16 @@ func (l *Loader) determineAttachmentType(filePath string, sizeBytes int64) AType
 
 	attachmentType := DetectType(filePath)
 	if attachmentType == Photo && sizeBytes > l.MaxPhotoAttachmentSizeBytes {
+		// Telegram accepts a larger file as a document even when the extension
+		// would normally classify it as a photo.
 		return Document
 	}
 
 	return attachmentType
 }
 
-// validateAttachments checks limits before processing files.
+// validateAttachments rejects collection-level errors before any file is
+// opened, keeping these failure paths free of resource cleanup.
 func (l *Loader) validateAttachments(filePaths []string) error {
 	if len(filePaths) == 0 {
 		return errors.New("no attachments provided")
