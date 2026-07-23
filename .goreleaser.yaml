@@ -4,12 +4,9 @@ version: 2
 
 project_name: telegram-owl
 
-before:
-  hooks:
-    - go mod tidy
-
 builds:
-  - binary: telegram-owl
+  - id: telegram-owl
+    binary: telegram-owl
     main: ./cmd/telegram-owl
     goos:
       - windows
@@ -36,6 +33,7 @@ builds:
       - CGO_ENABLED=0
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
+      - -mod=readonly
       - -trimpath
     ldflags:
       - -s -w -X github.com/beeyev/telegram-owl/internal/version.version={{.Version}}
@@ -64,6 +62,17 @@ archives:
 checksum:
   name_template: "telegram-owl_v{{.Version}}_checksums.txt"
 
+docker_digest:
+  name_template: "digests.txt"
+
+sboms:
+  - id: archives
+    artifacts: archive
+    disable: false
+  - id: packages
+    artifacts: package
+    disable: false
+
 changelog:
   disable: true
 
@@ -71,6 +80,7 @@ report_sizes: true
 
 release:
   mode: append
+  prerelease: auto
   footer: |
     # Install
 
@@ -120,9 +130,9 @@ dockers_v2:
       - "quay.io/beeyev/telegram-owl"
     tags:
       - "{{.Version}}"
-      - "{{.Major}}"
-      - "{{.Major}}.{{.Minor}}"
-      - latest
+      - '{{ if eq .Prerelease "" }}{{.Major}}{{ end }}'
+      - '{{ if eq .Prerelease "" }}{{.Major}}.{{.Minor}}{{ end }}'
+      - '{{ if eq .Prerelease "" }}latest{{ end }}'
     platforms:
       - linux/386
       - linux/amd64
@@ -148,6 +158,27 @@ dockers_v2:
     platforms:
       - linux/amd64
 
+nfpms:
+  - id: linux-packages
+    ids:
+      - telegram-owl
+    package_name: telegram-owl
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: Alexander Tebiev
+    homepage: "https://github.com/beeyev/telegram-owl"
+    maintainer: "Alexander Tebiev <alexander.tebiev@gmail.com>"
+    description: "CLI utility to send messages and files to Telegram chats and channels"
+    license: MIT
+    section: utils
+    priority: optional
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+    mtime: "{{ .CommitDate }}"
+    dependencies:
+      - ca-certificates
+
 
 scoops:
   -
@@ -159,6 +190,7 @@ scoops:
     description: "CLI utility to send messages and files to Telegram chats and channels"
     license: MIT
     shortcuts: [["telegram-owl.exe", "telegram-owl"]]
+    skip_upload: auto
     repository:
       owner: beeyev
       name: pkg
@@ -172,6 +204,7 @@ homebrew_casks:
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
     caveats: "run 'telegram-owl --help' to get started"
+    skip_upload: auto
     url:
       template: "https://github.com/beeyev/telegram-owl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     repository:

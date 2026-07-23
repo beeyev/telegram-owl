@@ -17,8 +17,9 @@ build: ## Build local production-style binary
 	@mkdir -p $(BUILD_DIR)
 	go build -trimpath -ldflags "-s -w" -o $(BUILD_OUTPUT) $(MAIN_PACKAGE)
 
-release-local: ## Build local snapshot release without publishing
-	GORELEASER_LOCAL=1 goreleaser release --snapshot --clean --skip=before
+release-local: ## Build local snapshot release without publishing (requires Syft)
+	@command -v syft >/dev/null || { printf '%s\n' 'error: syft is required for release SBOMs' >&2; exit 1; }
+	GORELEASER_LOCAL=1 goreleaser release --snapshot --clean
 
 mod: ## go mod tidy
 	go mod tidy
