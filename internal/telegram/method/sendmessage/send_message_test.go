@@ -2,6 +2,7 @@ package sendmessage_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,4 +70,21 @@ func TestSend_Success(t *testing.T) {
 	requestJSON, err := json.Marshal(mockHTTPClient.SubmitJSONResult[0].Body)
 	require.NoError(t, err, "Marshal should succeed")
 	assert.JSONEq(t, `{"chat_id":"123","text":"Hello, world!"}`, string(requestJSON))
+}
+
+func TestSend_DelegatesFormattedLengthValidation(t *testing.T) {
+	t.Parallel()
+
+	mockHTTPClient := testutils.NewMockHTTPDoer()
+	sender := sendmessage.New(mockHTTPClient)
+
+	options := &sendmessage.Options{
+		ChatID:    "123",
+		Text:      strings.Repeat("a", sendmessage.MaxTextLength+1),
+		ParseMode: "html",
+	}
+
+	err := sender.Send(t.Context(), options)
+	require.NoError(t, err)
+	require.Len(t, mockHTTPClient.SubmitJSONResult, 1)
 }

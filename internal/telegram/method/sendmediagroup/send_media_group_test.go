@@ -2,6 +2,7 @@ package sendmediagroup_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -90,6 +91,30 @@ func TestSend_Success(t *testing.T) {
 		"media":   `[{"type":"photo","media":"attach://file0"},{"type":"photo","media":"attach://file1"}]`,
 	}
 	assert.Exactly(t, expected, mockHTTPClient.SubmitMultipartResult[0].Fields, "unexpected request payload")
+}
+
+func TestSend_DelegatesFormattedCaptionLengthValidation(t *testing.T) {
+	t.Parallel()
+
+	options := &sendmediagroup.Options{
+		ChatID:    "123",
+		Caption:   strings.Repeat("a", sendmediagroup.MaxCaptionLength+1),
+		ParseMode: "html",
+		Attachments: attachment.Attachments{
+			{
+				AType:    attachment.Photo,
+				FileName: "file.jpg",
+				File:     &os.File{},
+			},
+		},
+	}
+
+	mockHTTPClient := testutils.NewMockHTTPDoer()
+	sender := sendmediagroup.New(mockHTTPClient)
+
+	err := sender.Send(t.Context(), options)
+	require.NoError(t, err)
+	require.Len(t, mockHTTPClient.SubmitMultipartResult, 1)
 }
 
 func TestSend_Success2(t *testing.T) {

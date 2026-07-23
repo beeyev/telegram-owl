@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v3"
+
+	"github.com/beeyev/telegram-owl/internal/telegram/method/sendrichmessage"
 )
 
 type inputValues struct {
@@ -39,8 +41,14 @@ Run with --help to see all options.`)
 
 	format := iv.cmd.String("format")
 
-	if format != "" && format != "markdown" && format != "html" {
-		return errors.New(`incorrect value for --format flag, possible values: markdown, html`)
+	if format != "" && format != "markdown" && format != "html" && !sendrichmessage.IsFormat(format) {
+		return errors.New(
+			`incorrect value for --format flag, possible values: markdown, html, rich-markdown, rich-html`,
+		)
+	}
+
+	if sendrichmessage.IsFormat(format) && iv.cmd.Bool("no-link-preview") {
+		return errors.New("--no-link-preview is not supported with rich message formats")
 	}
 
 	return nil
@@ -77,5 +85,11 @@ func (iv *inputValues) getMessage() (string, error) {
 		return "", fmt.Errorf("read stdin: %w", err)
 	}
 
-	return strings.TrimSpace(string(data)), nil
+	// Shell pipelines commonly append one line ending. Remove only that ending
+	// so indentation and other intentional whitespace remain available to rich
+	// Markdown and HTML.
+	message := strings.TrimSuffix(string(data), "\n")
+	message = strings.TrimSuffix(message, "\r")
+
+	return message, nil
 }

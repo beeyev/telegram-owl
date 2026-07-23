@@ -108,7 +108,10 @@ func (o *Options) validate() error {
 	if len(o.Attachments) == 0 {
 		validationErrors = append(validationErrors, "at least one attachment required")
 	}
-	if captionLen := utf8.RuneCountInString(o.Caption); captionLen > MaxCaptionLength {
+	// Telegram applies the limit after parsing entities. Without duplicating
+	// Telegram's parser, only plain-text length can be validated accurately.
+	captionLen := utf8.RuneCountInString(o.Caption)
+	if o.ParseMode == "" && captionLen > MaxCaptionLength {
 		validationErrors = append(
 			validationErrors,
 			fmt.Sprintf("message is too long: must be <= %d characters, got %d", MaxCaptionLength, captionLen),
