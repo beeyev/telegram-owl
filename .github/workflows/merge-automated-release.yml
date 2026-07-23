@@ -14,7 +14,7 @@ permissions:
   artifact-metadata: write # For recording attested artifacts
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
@@ -110,6 +110,7 @@ jobs:
           subject-checksums: ./dist/telegram-owl_${{ github.ref_name }}_checksums.txt
 
       - name: Attest container images
+        if: ${{ hashFiles('dist/digests.txt') != '' }}
         uses: actions/attest@v4
         with:
           subject-checksums: ./dist/digests.txt

@@ -80,6 +80,7 @@ report_sizes: true
 
 release:
   mode: append
+  prerelease: auto
   footer: |
     # Install
 
