@@ -27,6 +27,10 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm
+      - goos: linux
+        goarch: amd64
+      - goos: linux
+        goarch: arm64
     goarm:
       - 7
     env:
@@ -38,9 +42,27 @@ builds:
     ldflags:
       - -s -w -X github.com/beeyev/telegram-owl/internal/version.version={{.Version}}
 
+  - id: telegram-owl-linux-packages
+    binary: telegram-owl
+    main: ./cmd/telegram-owl
+    targets:
+      - linux_amd64_v1
+      - linux_arm64
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -mod=readonly
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/beeyev/telegram-owl/internal/version.version={{.Version}}
+
 
 archives:
-  - formats: [tar.gz]
+  - ids:
+      - telegram-owl
+      - telegram-owl-linux-packages
+    formats: [tar.gz]
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_v{{ .Version }}_
@@ -64,14 +86,6 @@ checksum:
 
 docker_digest:
   name_template: "digests.txt"
-
-sboms:
-  - id: archives
-    artifacts: archive
-    disable: false
-  - id: packages
-    artifacts: package
-    disable: false
 
 changelog:
   disable: true
@@ -138,6 +152,7 @@ dockers_v2:
       - linux/amd64
       - linux/arm64
       - linux/arm/v7
+    sbom: true
     labels:
       "org.opencontainers.image.created": "{{.Date}}"
       "org.opencontainers.image.name": "{{.ProjectName}}"
@@ -161,7 +176,7 @@ dockers_v2:
 nfpms:
   - id: linux-packages
     ids:
-      - telegram-owl
+      - telegram-owl-linux-packages
     package_name: telegram-owl
     file_name_template: "{{ .ConventionalFileName }}"
     vendor: Alexander Tebiev

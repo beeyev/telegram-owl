@@ -90,9 +90,6 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
-      - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0.24.0
-
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -103,6 +100,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+
+      - name: Generate release SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./dist
+          format: spdx-json
+          artifact-name: telegram-owl-${{ github.ref_name }}.spdx.json
+          output-file: ./dist/telegram-owl-${{ github.ref_name }}.spdx.json
+          upload-artifact: true
+          upload-artifact-retention: 90
+          upload-release-assets: false
+          dependency-snapshot: true
 
       - name: Attest release artifacts
         uses: actions/attest@v4
