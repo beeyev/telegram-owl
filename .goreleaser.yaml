@@ -28,7 +28,11 @@ builds:
       - goos: windows
         goarch: arm
       - goos: linux
+        goarch: 386
+      - goos: linux
         goarch: amd64
+      - goos: linux
+        goarch: arm
       - goos: linux
         goarch: arm64
     goarm:
@@ -46,8 +50,11 @@ builds:
     binary: telegram-owl
     main: ./cmd/telegram-owl
     targets:
+      - linux_386
       - linux_amd64_v1
+      - linux_arm_7
       - linux_arm64
+      - linux_riscv64
     env:
       - CGO_ENABLED=0
     mod_timestamp: '{{ .CommitTimestamp }}'
@@ -59,7 +66,8 @@ builds:
 
 
 archives:
-  - ids:
+  - id: github-archives
+    ids:
       - telegram-owl
       - telegram-owl-linux-packages
     formats: [tar.gz]
@@ -93,6 +101,10 @@ changelog:
 report_sizes: true
 
 release:
+  # Native Linux packages are published through Cloudsmith instead.
+  ids:
+    - github-archives
+  replace_existing_artifacts: true
   mode: append
   prerelease: auto
   footer: |
@@ -205,6 +217,7 @@ nfpms:
     section: utils
     priority: optional
     formats:
+      - apk
       - deb
       - rpm
     bindir: /usr/bin
