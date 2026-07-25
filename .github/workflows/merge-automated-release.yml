@@ -90,6 +90,14 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
+      - name: Validate AUR credentials
+        if: ${{ !contains(github.ref_name, '-') }}
+        shell: bash
+        env:
+          AUR_PRIVATE_SSH_KEY: ${{ secrets.AUR_PRIVATE_SSH_KEY }}
+        run: |
+          : "${AUR_PRIVATE_SSH_KEY:?Missing AUR_PRIVATE_SSH_KEY repository secret}"
+
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -100,6 +108,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          AUR_PRIVATE_SSH_KEY: ${{ secrets.AUR_PRIVATE_SSH_KEY }}
 
       - name: Generate release SBOM
         uses: anchore/sbom-action@v0

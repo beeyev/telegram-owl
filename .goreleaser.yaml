@@ -226,11 +226,37 @@ nfpms:
       - ca-certificates
 
 
+aurs:
+  - name: telegram-owl-bin
+    ids:
+      - github-archives
+    homepage: "https://github.com/beeyev/telegram-owl"
+    description: "CLI utility to send messages and files to Telegram chats and channels"
+    maintainers:
+      - "Alexander Tebiev <alexander.tebiev@gmail.com>"
+    commit_author:
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
+    license: MIT
+    private_key: "{{ .Env.AUR_PRIVATE_SSH_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/telegram-owl-bin.git"
+    skip_upload: auto
+    provides:
+      - telegram-owl
+    conflicts:
+      - telegram-owl
+    depends:
+      - ca-certificates
+    package: |-
+      install -Dm755 "./telegram-owl" "${pkgdir}/usr/bin/telegram-owl"
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/telegram-owl-bin/LICENSE"
+
+
 scoops:
   -
     commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
@@ -244,8 +270,8 @@ scoops:
 homebrew_casks:
   -
     commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
@@ -273,8 +299,8 @@ winget:
     publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
     package_identifier: beeyev.telegram-owl
     commit_author:
-      name: beeyev
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
     # Path for the file inside the repository.
     #
