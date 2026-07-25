@@ -28,7 +28,11 @@ builds:
       - goos: windows
         goarch: arm
       - goos: linux
+        goarch: 386
+      - goos: linux
         goarch: amd64
+      - goos: linux
+        goarch: arm
       - goos: linux
         goarch: arm64
     goarm:
@@ -46,8 +50,11 @@ builds:
     binary: telegram-owl
     main: ./cmd/telegram-owl
     targets:
+      - linux_386
       - linux_amd64_v1
+      - linux_arm_7
       - linux_arm64
+      - linux_riscv64
     env:
       - CGO_ENABLED=0
     mod_timestamp: '{{ .CommitTimestamp }}'
@@ -59,7 +66,8 @@ builds:
 
 
 archives:
-  - ids:
+  - id: github-archives
+    ids:
       - telegram-owl
       - telegram-owl-linux-packages
     formats: [tar.gz]
@@ -93,6 +101,10 @@ changelog:
 report_sizes: true
 
 release:
+  # Native Linux packages are published through Cloudsmith instead.
+  ids:
+    - github-archives
+  replace_existing_artifacts: true
   mode: append
   prerelease: auto
   footer: |
@@ -205,6 +217,7 @@ nfpms:
     section: utils
     priority: optional
     formats:
+      - apk
       - deb
       - rpm
     bindir: /usr/bin
@@ -213,11 +226,37 @@ nfpms:
       - ca-certificates
 
 
+aurs:
+  - name: telegram-owl-bin
+    ids:
+      - github-archives
+    homepage: "https://github.com/beeyev/telegram-owl"
+    description: "CLI utility to send messages and files to Telegram chats and channels"
+    maintainers:
+      - "Alexander Tebiev <alexander.tebiev@gmail.com>"
+    commit_author:
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
+    license: MIT
+    private_key: "{{ .Env.AUR_PRIVATE_SSH_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/telegram-owl-bin.git"
+    skip_upload: auto
+    provides:
+      - telegram-owl
+    conflicts:
+      - telegram-owl
+    depends:
+      - ca-certificates
+    package: |-
+      install -Dm755 "./telegram-owl" "${pkgdir}/usr/bin/telegram-owl"
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/telegram-owl-bin/LICENSE"
+
+
 scoops:
   -
     commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
@@ -231,8 +270,8 @@ scoops:
 homebrew_casks:
   -
     commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
     homepage: "https://github.com/beeyev/telegram-owl"
     description: "CLI utility to send messages and files to Telegram chats and channels"
@@ -260,8 +299,8 @@ winget:
     publisher_support_url: "https://github.com/beeyev/telegram-owl/issues"
     package_identifier: beeyev.telegram-owl
     commit_author:
-      name: beeyev
-      email: bot@goreleaser.com
+      name: Alexander Tebiev
+      email: alexander.tebiev@gmail.com
     commit_msg_template: "{{ .PackageIdentifier }}: {{ .Tag }}"
     # Path for the file inside the repository.
     #

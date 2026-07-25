@@ -90,6 +90,14 @@ jobs:
           echo ""
           echo "🔹 Current tag: ${{ github.ref_name }}"
 
+      - name: Validate AUR credentials
+        if: ${{ !contains(github.ref_name, '-') }}
+        shell: bash
+        env:
+          AUR_PRIVATE_SSH_KEY: ${{ secrets.AUR_PRIVATE_SSH_KEY }}
+        run: |
+          : "${AUR_PRIVATE_SSH_KEY:?Missing AUR_PRIVATE_SSH_KEY repository secret}"
+
       - name: 🚀 Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -100,6 +108,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          AUR_PRIVATE_SSH_KEY: ${{ secrets.AUR_PRIVATE_SSH_KEY }}
 
       - name: Generate release SBOM
         uses: anchore/sbom-action@v0
@@ -123,3 +132,46 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-checksums: ./dist/digests.txt
+
+      - name: Set up Cloudsmith CLI
+        uses: cloudsmith-io/cloudsmith-cli-action@v2
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+
+      - name: Publish Linux packages to Cloudsmith
+        shell: bash
+        env:
+          CLOUDSMITH_NAMESPACE: ${{ vars.CLOUDSMITH_NAMESPACE }}
+          CLOUDSMITH_REPOSITORY: ${{ vars.CLOUDSMITH_REPOSITORY }}
+        run: |
+          set -Eeuo pipefail
+          shopt -s nullglob
+
+          : "${CLOUDSMITH_NAMESPACE:?Set the CLOUDSMITH_NAMESPACE repository variable}"
+          : "${CLOUDSMITH_REPOSITORY:?Set the CLOUDSMITH_REPOSITORY repository variable}"
+
+          publish_packages() {
+            local format="$1"
+            local target="$2"
+            local label="$3"
+            shift 3
+            local packages=("$@")
+
+            if ((${#packages[@]} == 0)); then
+              printf 'No %s packages found in dist/\n' "$label" >&2
+              return 1
+            fi
+
+            for package in "${packages[@]}"; do
+              cloudsmith push "$format" --republish "$target" "$package"
+            done
+          }
+
+          repository="${CLOUDSMITH_NAMESPACE}/${CLOUDSMITH_REPOSITORY}"
+          deb_packages=(dist/*.deb)
+          rpm_packages=(dist/*.rpm)
+          apk_packages=(dist/*.apk)
+
+          publish_packages deb "${repository}/any-distro/any-version" Debian "${deb_packages[@]}"
+          publish_packages rpm "${repository}/any-distro/any-version" RPM "${rpm_packages[@]}"
+          publish_packages alpine "${repository}/alpine/any-version" Alpine "${apk_packages[@]}"
