@@ -23,7 +23,21 @@ Whether you're a DevOps engineer automating infrastructure, a developer managing
 
 ## Installation
 
-### macOS and Linux
+### npm (macOS, Linux, and Windows)
+
+Install globally:
+
+```console
+npm install --global telegram-owl
+```
+
+Or run directly without installing:
+
+```console
+npx --yes telegram-owl --token YOUR_BOT_TOKEN --chat YOUR_CHAT_ID --message "Hello from Telegram Owl"
+```
+
+### Homebrew (macOS and Linux)
 
 Install with [`Homebrew`](https://brew.sh/)
 ```console
@@ -43,7 +57,7 @@ xattr -d com.apple.quarantine /opt/homebrew/bin/telegram-owl
 # Go to: System Settings > Privacy & Security > Allow "telegram-owl"
 ```
 
-### Windows
+### Scoop Windows
 
 Install with [`Scoop`](https://scoop.sh/)
 ```console
@@ -56,10 +70,24 @@ Install with `winget`
 winget install telegram-owl
 ```
 
-### Binary Releases
-For Windows, Mac OS(10.12+) or Linux, you can download a binary release [here](https://github.com/beeyev/telegram-owl/releases/latest).
+<details>
+<summary><h3>Linux and Docker distribution packages</h3></summary>
 
-### Docker
+Prebuilt packages are also available through:
+
+- Debian and Ubuntu (`.deb`), Fedora and RHEL (`.rpm`), and Alpine (`.apk`):
+  [Cloudsmith `beeyev/pkg`](https://broadcasts.cloudsmith.com/beeyev/pkg?sort=name&page=1)
+- Arch Linux:
+  [`telegram-owl-bin`](https://aur.archlinux.org/packages/telegram-owl-bin)
+
+Install from the AUR with a helper such as `yay`:
+
+```console
+yay -S telegram-owl-bin
+```
+
+#### Docker
+
 Official multi-architecture images live on [Docker Hub](https://hub.docker.com/r/beeyev/telegram-owl), [GHCR](https://github.com/beeyev/telegram-owl/pkgs/container/telegram-owl), and [Quay](https://quay.io/repository/beeyev/telegram-owl). Pull the tag you need and run the CLI directly:
 
 ```console
@@ -73,6 +101,13 @@ COPY --from=beeyev/telegram-owl:latest /usr/bin/telegram-owl /usr/local/bin/tele
 ```
 
 This reuses the official build without compiling from source.
+
+</details>
+
+### Binary Releases
+
+For macOS 10.12+, Linux, or Windows, download a binary release
+[here](https://github.com/beeyev/telegram-owl/releases/latest).
 
 ## 🚀 Usage
 
