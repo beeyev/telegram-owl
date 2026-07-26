@@ -122,6 +122,55 @@ jobs:
           upload-release-assets: false
           dependency-snapshot: true
 
+      - name: Upload release handoff
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-handoff
+          path: |
+            dist/*.apk
+            dist/*.deb
+            dist/*.rpm
+            dist/*_checksums.txt
+            dist/digests.txt
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+      - name: Upload npm archive handoff
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-archives
+          path: |
+            dist/telegram-owl_v*_Linux_64bit.tar.gz
+            dist/telegram-owl_v*_Linux_ARM64.tar.gz
+            dist/telegram-owl_v*_macOS_64bit.tar.gz
+            dist/telegram-owl_v*_macOS_ARM64.tar.gz
+            dist/telegram-owl_v*_Windows_64bit.zip
+            dist/telegram-owl_v*_checksums.txt
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  post-release:
+    name: Attest & publish Linux packages
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Download release handoff
+        uses: actions/download-artifact@v8
+        with:
+          name: release-handoff
+          path: dist
+
       - name: Attest release artifacts
         uses: actions/attest@v4
         with:
@@ -175,3 +224,196 @@ jobs:
           publish_packages deb "${repository}/any-distro/any-version" Debian "${deb_packages[@]}"
           publish_packages rpm "${repository}/any-distro/any-version" RPM "${rpm_packages[@]}"
           publish_packages alpine "${repository}/alpine/any-version" Alpine "${apk_packages[@]}"
+
+  prepare-npm:
+    name: Prepare npm packages
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Use npm 12
+        run: |
+          set -Eeuo pipefail
+          npm install --global npm@12
+          [[ "$(npm --version)" == 12.* ]]
+
+      - name: Download npm archive handoff
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-archives
+          path: npm/release
+
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Test npm package
+        run: npm test
+
+      - name: Build npm packages from release archives
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+          release_version="${RELEASE_TAG#v}"
+          node scripts/build-packages.js \
+            release \
+            "$release_version" \
+            release-packages
+
+      - name: Verify real release binary and launcher
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+          release_version="${RELEASE_TAG#v}"
+          verification_root="$(mktemp -d)"
+          trap 'rm -rf "$verification_root"' EXIT
+
+          mkdir -p "$verification_root/node_modules/@beeyev"
+          cp -R \
+            release-packages/telegram-owl \
+            "$verification_root/node_modules/telegram-owl"
+          cp -R \
+            release-packages/telegram-owl-linux-x64 \
+            "$verification_root/node_modules/@beeyev/telegram-owl-linux-x64"
+
+          version_output="$(
+            node \
+              "$verification_root/node_modules/telegram-owl/bin/telegram-owl.js" \
+              --version
+          )"
+          if ! grep -Fqx "telegram-owl v${release_version}" <<<"$version_output"; then
+            printf 'Expected telegram-owl v%s, got:\n%s\n' \
+              "$release_version" "$version_output" >&2
+            exit 1
+          fi
+
+      - name: Test packed package with npm 12
+        run: npm run test:package
+
+      - name: Pack npm packages
+        run: |
+          set -Eeuo pipefail
+          shopt -s nullglob
+          mkdir -p tarballs
+          package_directories=(release-packages/*)
+
+          if ((${#package_directories[@]} != 6)); then
+            printf 'Expected six npm package directories, found %s\n' \
+              "${#package_directories[@]}" >&2
+            exit 1
+          fi
+
+          for package_directory in "${package_directories[@]}"; do
+            npm pack "$package_directory" --pack-destination tarballs
+          done
+
+      - name: Upload npm packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-packages
+          path: npm/tarballs/*.tgz
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  publish-npm:
+    name: Publish to npm
+    needs: prepare-npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Use npm 12
+        run: |
+          set -Eeuo pipefail
+          npm install --global npm@12
+          [[ "$(npm --version)" == 12.* ]]
+
+      - name: Download npm packages
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-packages
+          path: npm-packages
+
+      - name: Publish platform packages and main package
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+          release_version="${RELEASE_TAG#v}"
+          node npm/scripts/publish-packages.js \
+            npm-packages \
+            "$release_version"
+
+  smoke-test-npm:
+    name: Smoke-test npm package
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Smoke-test published package
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -Eeuo pipefail
+          release_version="${RELEASE_TAG#v}"
+          version_output=""
+
+          for attempt in {1..12}; do
+            if version_output="$(
+              npm exec \
+                --prefer-online \
+                --yes \
+                --package="telegram-owl@${release_version}" \
+                -- \
+                telegram-owl --version
+            )" &&
+              grep -Fqx "telegram-owl v${release_version}" <<<"$version_output"; then
+              printf '%s\n' "$version_output"
+              exit 0
+            fi
+
+            if ((attempt == 12)); then
+              printf 'telegram-owl@%s did not report the expected version. Last output:\n%s\n' \
+                "$release_version" "$version_output" >&2
+              exit 1
+            fi
+
+            sleep 10
+          done

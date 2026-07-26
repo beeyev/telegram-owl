@@ -18,6 +18,10 @@ dist/
 *.dll
 *.so
 *.dylib
+npm/release/
+npm/release-packages/
+npm/tarballs/
+npm/node_modules/
 
 # Test binary, built with `go test -c`
 *.test

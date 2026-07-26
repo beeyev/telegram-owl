@@ -1,0 +1,47 @@
+{
+  "name": "telegram-owl",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CLI utility to send messages and files to Telegram chats and channels",
+  "license": "MIT",
+  "author": "Alexander Tebiev <alexander.tebiev@gmail.com>",
+  "homepage": "https://github.com/beeyev/telegram-owl",
+  "bugs": {
+    "url": "https://github.com/beeyev/telegram-owl/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beeyev/telegram-owl.git"
+  },
+  "keywords": [
+    "telegram",
+    "telegram-bot",
+    "cli",
+    "notification",
+    "devops"
+  ],
+  "bin": {
+    "telegram-owl": "bin/telegram-owl.js"
+  },
+  "scripts": {
+    "test": "node --test test/build-packages.test.js test/launcher.test.js test/publish-packages.test.js",
+    "test:package": "node --test test/package.test.js"
+  },
+  "devDependencies": {
+    "tar": "^7.5.22",
+    "yauzl": "^3.4.0",
+    "yazl": "^3.3.1"
+  },
+  "files": [
+    "bin",
+    "platforms.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
