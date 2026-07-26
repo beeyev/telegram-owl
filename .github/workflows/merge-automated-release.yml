@@ -310,7 +310,7 @@ jobs:
           set -Eeuo pipefail
           shopt -s nullglob
           mkdir -p tarballs
-          package_directories=(release-packages/*)
+          package_directories=(./release-packages/*)
 
           if ((${#package_directories[@]} != 6)); then
             printf 'Expected six npm package directories, found %s\n' \
