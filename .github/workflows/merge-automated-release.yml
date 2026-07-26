@@ -393,27 +393,31 @@ jobs:
         run: |
           set -Eeuo pipefail
           release_version="${RELEASE_TAG#v}"
+          max_attempts=12
           version_output=""
 
-          for attempt in {1..12}; do
+          for ((attempt = 1; attempt <= max_attempts; attempt += 1)); do
+            printf 'Smoke-test attempt %s/%s\n' "$attempt" "$max_attempts"
             if version_output="$(
               npm exec \
                 --prefer-online \
                 --yes \
                 --package="telegram-owl@${release_version}" \
                 -- \
-                telegram-owl --version
+                telegram-owl --version 2>&1
             )" &&
               grep -Fqx "telegram-owl v${release_version}" <<<"$version_output"; then
               printf '%s\n' "$version_output"
               exit 0
             fi
 
-            if ((attempt == 12)); then
+            if ((attempt == max_attempts)); then
               printf 'telegram-owl@%s did not report the expected version. Last output:\n%s\n' \
                 "$release_version" "$version_output" >&2
               exit 1
             fi
 
+            printf 'Smoke-test attempt %s/%s failed; retrying in 10 seconds. Output:\n%s\n' \
+              "$attempt" "$max_attempts" "$version_output" >&2
             sleep 10
           done
