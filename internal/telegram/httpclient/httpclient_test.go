@@ -23,6 +23,17 @@ func (b failingJSONBody) MarshalJSON() ([]byte, error) {
 	return nil, b.err
 }
 
+type closeTrackingReader struct {
+	*strings.Reader
+
+	closed bool
+}
+
+func (r *closeTrackingReader) Close() error {
+	r.closed = true
+	return nil
+}
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -102,6 +113,24 @@ func TestSubmitJSON_Success(t *testing.T) {
 	assert.Exactly(t, "application/json", captured.contentType)
 }
 
+func TestSubmitJSON_BaseURLPath(t *testing.T) {
+	t.Parallel()
+
+	requestPath := make(chan string, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestPath <- r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok": true}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := httpclient.New(server.URL+"/api/", "token", "")
+	require.NoError(t, err)
+	err = client.SubmitJSON(t.Context(), http.MethodPost, "sendMessage", map[string]string{"text": "hello"})
+	require.NoError(t, err)
+	assert.Equal(t, "/api/bottoken/sendMessage", <-requestPath)
+}
+
 func TestSubmitMultipart_Success(t *testing.T) {
 	t.Parallel()
 
@@ -134,8 +163,7 @@ func TestSubmitMultipart_Success(t *testing.T) {
 	require.NotNil(t, client)
 	require.NoError(t, err)
 
-	fileReader := io.NopCloser(strings.NewReader("hello world"))
-	defer fileReader.Close()
+	fileReader := &closeTrackingReader{Reader: strings.NewReader("hello world")}
 
 	multipartFile := httpclient.MultipartFile{
 		FieldName:  "file_field",
@@ -152,6 +180,7 @@ func TestSubmitMultipart_Success(t *testing.T) {
 		[]httpclient.MultipartFile{multipartFile},
 	)
 	require.NoError(t, err)
+	assert.False(t, fileReader.closed, "SubmitMultipart must not close the caller's file reader")
 }
 
 func TestErrorHandling_NetworkTransportError(t *testing.T) {
