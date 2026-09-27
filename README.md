@@ -45,7 +45,7 @@ brew tap beeyev/pkg https://github.com/beeyev/pkg
 brew install --cask telegram-owl
 ```
 
-** macOS Security Note:**
+**macOS Security Note:**
 
 If macOS blocks the app with "cannot be opened because the developer cannot be verified":
 
