@@ -1,6 +1,6 @@
 # Telegram Owl 🦉
 
-> 📣 Use it to send deployment notifications, alerts, logs, reports, or media - from scripts, cron jobs, CI/CD pipelines, monitoring tools, or any shell environment.
+> Use it to send deployment notifications, alerts, logs, reports, or media - from scripts, cron jobs, CI/CD pipelines, monitoring tools, or any shell environment.
 
 Whether you're a DevOps engineer automating infrastructure, a developer managing CI/CD pipelines, or just want to notify your Telegram group from a terminal script - **Telegram Owl** gives you a simple and script-friendly way to do it.
 
@@ -45,7 +45,7 @@ brew tap beeyev/pkg https://github.com/beeyev/pkg
 brew install --cask telegram-owl
 ```
 
-**⚠️ macOS Security Note:**
+** macOS Security Note:**
 
 If macOS blocks the app with "cannot be opened because the developer cannot be verified":
 
@@ -109,7 +109,7 @@ This reuses the official build without compiling from source.
 For macOS 10.12+, Linux, or Windows, download a binary release
 [here](https://github.com/beeyev/telegram-owl/releases/latest).
 
-## 🚀 Usage
+## Usage
 
 To start using **Telegram Owl**, you need to obtain a Telegram bot token and chat ID.
 You can learn how to get it [here](/docs/HowToTelegramBot.md).
@@ -123,14 +123,14 @@ telegram-owl \
   [options]
 ```
 
-### 🔐 Required Flags
+### Required Flags
 
 | Flag            | Description                     | Environment Variable        |
 |----------------|---------------------------------|-----------------------------|
 | `--token`, `-t`  | Telegram bot token             | `TELEGRAM_OWL_TOKEN`       |
 | `--chat`, `-c`   | Chat ID or `@username`        | `TELEGRAM_OWL_CHAT`        |
 
-### ⚙️ Common Flags
+### Common Flags
 
 | Flag                  | Description                                                   |
 |-----------------------|---------------------------------------------------------------|
@@ -147,7 +147,7 @@ telegram-owl \
 | `--proxy`              | Proxy URL (HTTP/HTTPS/SOCKS5) for outbound requests           |
 | `--verbose`            | Print detailed logs for debugging purposes                    |
 
-## 📌 Examples
+## Examples
 
 ### Send a Simple Message
 
@@ -218,7 +218,7 @@ cat message.txt | telegram-owl -t $BOT_TOKEN -c @devs --stdin
 telegram-owl -t $BOT_TOKEN -c @forumgroup --thread 67890 -m "New bug report 🐞"
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 Set environment variables to simplify usage:
 
@@ -250,7 +250,7 @@ telegram-owl --proxy http://user:pass@proxy.local:8080 -t $BOT_TOKEN -c @channel
 
 Authentication is supported by embedding credentials in the URL, e.g. `http://user:pass@proxy.local:3128`.
 
-## 📏 Attachment Limits
+## Attachment Limits
 
 | Limit Type              | Value         |
 |-------------------------|---------------|
@@ -259,11 +259,11 @@ Authentication is supported by embedding credentials in the URL, e.g. `http://us
 | Max file size           | 50 MB         |
 | Max total size per send | 50 MB total   |
 
-## 🐞 Found a Bug or Want a Feature?
+## Found a Bug or Want a Feature?
 
 Feel free to open an issue on [GitHub](https://github.com/beeyev/telegram-owl/issues).
 
-## © License
+## License
 
 The MIT License (MIT). Please see [License File](https://github.com/beeyev/telegram-owl/blob/master/LICENSE) for more information.
 
