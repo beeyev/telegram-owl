@@ -108,6 +108,8 @@ release:
   replace_existing_artifacts: true
   mode: append
   prerelease: auto
+  preflight:
+    fail_on_error: true
   footer: |
     # Install
 
