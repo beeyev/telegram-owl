@@ -16,6 +16,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  GO_LEGACY_WIN7_VERSION: "1.27.1-1" # thongtech/go-legacy-win7 release, without "v"
+
 jobs:
   unit-tests:
     name: ✅ Run Unit Tests
@@ -46,6 +49,28 @@ jobs:
 
       - name: 🧪 Build (Validation)
         run: go build -v ./...
+
+  windows-legacy-builds:
+    name: Build Windows 7 binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Go with Windows 7 support
+        uses: ./.github/actions/setup-go-legacy-win7
+        with:
+          version: ${{ env.GO_LEGACY_WIN7_VERSION }}
+
+      - name: Build Windows binary
+        run: |
+          set -Eeuo pipefail
+          for goarch in 386 amd64; do
+            GOOS=windows GOARCH="$goarch" CGO_ENABLED=0 \
+              go build -mod=readonly -trimpath \
+                -o "${RUNNER_TEMP}/telegram-owl-${goarch}.exe" ./cmd/telegram-owl
+          done
 
   npm-tests:
     name: Test npm package with Node ${{ matrix.node-version }} and npm 12
