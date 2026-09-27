@@ -1,0 +1,24 @@
+name: Set up Go with Windows 7 support
+description: Install the thongtech/go-legacy-win7 toolchain and make it the active Go.
+
+inputs:
+  version:
+    description: Upstream release version without the leading "v", e.g. 1.27.1-1.
+    required: true
+
+outputs:
+  go-version:
+    description: Go version reported by the installed toolchain, e.g. 1.27.1.
+    value: ${{ steps.setup.outputs.go-version }}
+  goroot:
+    description: GOROOT of the installed toolchain.
+    value: ${{ steps.setup.outputs.goroot }}
+
+runs:
+  using: composite
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: bash "${GITHUB_ACTION_PATH}/setup.sh"

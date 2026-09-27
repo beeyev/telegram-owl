@@ -17,6 +17,9 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+env:
+  GO_LEGACY_WIN7_VERSION: "1.27.1-1" # thongtech/go-legacy-win7 release, without "v"
+
 jobs:
   release:
     name: 🛠 Build & Release
@@ -28,13 +31,10 @@ jobs:
         with:
           fetch-depth: 0 # Required for GoReleaser to detect version info
 
-      - name: 🧰 Set up Go
-        uses: actions/setup-go@v7
+      - name: 🧰 Set up Go with Windows 7 support
+        uses: ./.github/actions/setup-go-legacy-win7
         with:
-          go-version-file: go.mod
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
+          version: ${{ env.GO_LEGACY_WIN7_VERSION }}
 
       - name: Verify module dependencies
         run: go mod verify
